@@ -5,7 +5,7 @@ import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('products')
 export class ProductEntity extends BaseEntity {
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', nullable: false })
   product_name: string;
 
   @Column({ type: 'jsonb', nullable: true })
@@ -14,19 +14,19 @@ export class ProductEntity extends BaseEntity {
   @Column({ type: 'varchar', nullable: true, default: '' })
   product_thumbnail: string;
 
-  @Column({ type: 'varchar', nullable: true, default: '' })
+  @Column({ type: 'varchar', nullable: false, default: '' })
   product_description: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'jsonb', nullable: false })
   product_attribute: object;
 
-  @Column({ type: 'float', nullable: true, default: 0 })
+  @Column({ type: 'float', nullable: false, default: 0 })
   product_price: number;
 
-  @Column({ type: 'int', nullable: true, default: 0 })
+  @Column({ type: 'int', nullable: false, default: 0 })
   product_quantity: number;
 
-  @Column({ type: 'enum', nullable: true, enum: ['Facial', 'Body', 'Hair'] })
+  @Column({ type: 'enum', nullable: false, enum: ['Facial', 'Body', 'Hair'] })
   product_category: string;
 
   @Column({

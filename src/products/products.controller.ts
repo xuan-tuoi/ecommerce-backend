@@ -90,25 +90,16 @@ export class ProductsController {
   async createProduct(
     // @UploadedFile() image: Express.Multer.File,
     @Req() req: Request,
-    @Body() body: CreateProductDto,
+    // @Body() body: CreateProductDto,
+    @Body() body: any,
   ) {
     const user = req['user'];
-    console.log('user', user);
-    // const imageUri = await this.cloudinaryService.uploadImageFromBase64(
-    //   `ecommerce/user.username`,
-    //   base64,
-    // );
-    const imageUri = '';
-    return await this.productsService.createProduct(user, imageUri, body);
-
-    /**
- *  image: 
- * "fieldname": "image",
-    "originalname": "garnier.png",
-    "encoding": "7bit",
-    "mimetype": "image/png",
-    "buffer"
- */
+    const imgSrc = body.imgSrc;
+    const imageUri = await this.cloudinaryService.uploadImageFromBase64(
+      user.email,
+      imgSrc,
+    );
+    return await this.productsService.createProduct(user, imageUri.url, body);
   }
 
   /**
