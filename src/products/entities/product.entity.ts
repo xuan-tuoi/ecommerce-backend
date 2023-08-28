@@ -5,7 +5,7 @@ import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('products')
 export class ProductEntity extends BaseEntity {
-  @Column({ type: 'varchar', nullable: false })
+  @Column({ type: 'varchar', nullable: true })
   product_name: string;
 
   @Column({ type: 'jsonb', nullable: true })
@@ -14,19 +14,19 @@ export class ProductEntity extends BaseEntity {
   @Column({ type: 'varchar', nullable: true, default: '' })
   product_thumbnail: string;
 
-  @Column({ type: 'varchar', nullable: false, default: '' })
+  @Column({ type: 'varchar', nullable: true, default: '' })
   product_description: string;
 
-  @Column({ type: 'jsonb', nullable: false })
+  @Column({ type: 'jsonb', nullable: true })
   product_attribute: object;
 
-  @Column({ type: 'float', nullable: false, default: 0 })
+  @Column({ type: 'float', nullable: true, default: 0 })
   product_price: number;
 
-  @Column({ type: 'int', nullable: false, default: 0 })
+  @Column({ type: 'int', nullable: true, default: 0 })
   product_quantity: number;
 
-  @Column({ type: 'enum', nullable: false, enum: ['Facial', 'Body', 'Hair'] })
+  @Column({ type: 'enum', nullable: true, enum: ['Facial', 'Body', 'Hair'] })
   product_category: string;
 
   @Column({
@@ -35,10 +35,10 @@ export class ProductEntity extends BaseEntity {
   })
   product_ratingsAverage: number;
 
-  @Column({ default: true, select: false })
+  @Column({ default: true, select: true })
   isDraft: boolean;
 
-  @Column({ default: false, select: false })
+  @Column({ default: true, select: true })
   isPublished: boolean;
 
   @ManyToOne(() => UserEntity, (user) => user.products)
