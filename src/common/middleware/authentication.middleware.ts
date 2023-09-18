@@ -3,6 +3,7 @@ import {
   NestMiddleware,
   HttpException,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response, NextFunction } from 'express';
@@ -20,13 +21,13 @@ export class AuthenticationMiddleware implements NestMiddleware {
     // b1: check userId in header
     const userId = req.headers[HEADER.CLIENT_ID]?.toString();
     if (!userId) {
-      throw new HttpException('UNAUTHORIZED Request', HttpStatus.UNAUTHORIZED);
+      throw new BadRequestException('Missing client id');
     }
     // b2. get access token from tokenService ?
     const keyStore = await this.keyTokenService.getKeyToken({ userId });
-
+    console.log('keyStore::::::::::', keyStore);
     if (!keyStore) {
-      throw new HttpException('Not found keyStore', HttpStatus.NOT_FOUND);
+      throw new BadRequestException('Invalid client id');
     }
     if (req.headers[HEADER.REFRESHTOKEN]) {
       try {
@@ -35,22 +36,19 @@ export class AuthenticationMiddleware implements NestMiddleware {
           secret: keyStore.privateKey,
         });
         if (userId !== decoder.id) {
-          throw new HttpException('Invalid Request', HttpStatus.UNAUTHORIZED);
+          throw new BadRequestException('Invalid refresh token');
         }
         req['keyStore'] = keyStore;
         req['user'] = decoder;
         req['refreshToken'] = refreshToken;
         return next();
       } catch (error) {
-        throw new HttpException('Invalid Request', HttpStatus.UNAUTHORIZED);
+        throw new BadRequestException('Invalid refresh token');
       }
     }
     const accessToken = req.headers[HEADER.AUTHORIZATION]?.toString();
     if (!accessToken) {
-      throw new HttpException(
-        ' Unauthorization Request ',
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new BadRequestException('Missing access token');
     }
     try {
       const decoder = await this.jwtService.verifyAsync(accessToken, {
@@ -58,13 +56,13 @@ export class AuthenticationMiddleware implements NestMiddleware {
       });
 
       if (userId !== decoder.id) {
-        throw new HttpException('Invalid Request', HttpStatus.UNAUTHORIZED);
+        throw new BadRequestException('Invalid access token');
       }
       req['keyStore'] = keyStore;
       req['user'] = decoder;
       return next();
     } catch (error) {
-      throw new HttpException(error, HttpStatus.UNAUTHORIZED);
+      throw new BadRequestException('Invalid access token');
     }
   }
 }

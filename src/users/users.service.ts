@@ -23,7 +23,7 @@ export class UsersService {
       });
       return user;
     } catch (error) {
-      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(error);
     }
   }
 
@@ -33,7 +33,7 @@ export class UsersService {
         where: { id },
       })
       .catch((err) => {
-        throw new HttpException(err, HttpStatus.BAD_REQUEST);
+        throw new BadRequestException(err);
       });
     if (!user) {
       throw new BadRequestException('User not found');
@@ -46,7 +46,7 @@ export class UsersService {
       userDto.username = userDto.email;
     }
     const user = await this.usersRepository.save(userDto).catch((err) => {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(err);
     });
     return user;
   }

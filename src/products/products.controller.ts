@@ -1,5 +1,5 @@
 import {
-  Body,
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -7,18 +7,20 @@ import {
   Post,
   Put,
   Query,
-  Req,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
+import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import * as Papa from 'papaparse';
+import { readFileSync } from 'fs';
+import { diskStorage } from 'multer';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PageOptionsDto } from 'src/common/dto/pageOptions.dto';
-import { pick } from 'src/common/utils/helpers';
+import { pick, removeUndefined } from 'src/common/utils/helpers';
 import { CreateProductDto } from './dto/create-product.dto';
 import { SearchProductDto } from './dto/search-product.dto';
 import { ProductsService } from './products.service';
+import * as MOCKED_RESPONSE_TS from '../../public/files/skincare_products_clean.json';
 
 @Controller('v1/products')
 export class ProductsController {
@@ -28,7 +30,10 @@ export class ProductsController {
   ) {}
 
   /**
-   * Tìm kiếm sản phẩm theo tên
+   * lấy danh sách sản phẩm theo brand, category và theo tên sản phẩm
+   * @param queryOptions
+   * @param pageOptionsDto
+   * @returns danh sách product by page
    */
   @Get('/search')
   async searchProducts(
@@ -38,11 +43,14 @@ export class ProductsController {
     const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
     options.limit = options.limit > 100 ? 100 : options.limit;
     const listQuery = pick(queryOptions, [
-      'product_name',
       'product_category',
       'product_shop',
+      'search_key',
     ]);
-    return await this.productsService.searchProducts(listQuery, options);
+    return await this.productsService.searchProducts(
+      removeUndefined(listQuery),
+      options,
+    );
   }
 
   /**
@@ -78,6 +86,43 @@ export class ProductsController {
     return await this.productsService.getProductById(productId);
   }
 
+  @Post('/clone-data')
+  @UseInterceptors(
+    FileInterceptor('file_asset', {
+      storage: diskStorage({
+        destination: './files',
+      }),
+    }),
+  )
+  async cloneData() {
+    const csvFile = readFileSync('files/cosmetics.csv');
+    const csvString = csvFile.toString();
+
+    // const parsedCsv = csvString.split('\n').map((row) => row.split(','));
+    // const header = parsedCsv[0];
+    // const data = parsedCsv.slice(1);
+    // const products = data.slice(0, 2).map((row) => {
+    //   const product = {};
+    //   row.forEach((item, index) => {
+    //     product[header[index]] = item;
+    //   });
+    //   return product;
+    // });
+    const parsedCsv = await Papa.parse(csvString, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (header) => header.toLowerCase().replace('#', '').trim(),
+      complete: (results) => results.data,
+    });
+    return await this.productsService.cloneData(parsedCsv.data);
+  }
+
+  @Post('/clone-data-or')
+  async cloneDataOr() {
+    const data = MOCKED_RESPONSE_TS;
+    return await this.productsService.cloneDataV2(data);
+  }
+
   /**
    * create or update a product
    * [SHOP]
@@ -86,20 +131,26 @@ export class ProductsController {
    * @returns product
    */
   @Put()
-  // @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(AnyFilesInterceptor())
   async createProduct(
-    // @UploadedFile() image: Express.Multer.File,
-    @Req() req: Request,
-    // @Body() body: CreateProductDto,
-    @Body() body: any,
+    // @Req() req: Request,
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    const user = req['user'];
-    const imgSrc = body.imgSrc;
-    const imageUri = await this.cloudinaryService.uploadImageFromBase64(
-      user.email,
-      imgSrc,
-    );
-    return await this.productsService.createProduct(user, imageUri.url, body);
+    try {
+      // const user = req['user'];
+      console.log('file -------------> ', files);
+      // const imageUri = await this.cloudinaryService.uploadImage(
+      //   // user.email,
+      //   'test',
+      //   file,
+      // );
+      // return await this.productsService.createProduct(user, imageUri.url, body);
+      return {
+        mes: 'oke',
+      };
+    } catch (error) {
+      return new BadRequestException(error.message);
+    }
   }
 
   /**

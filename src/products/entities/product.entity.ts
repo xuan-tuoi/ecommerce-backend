@@ -5,17 +5,11 @@ import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('products')
 export class ProductEntity extends BaseEntity {
-  @Column({ type: 'varchar', nullable: false })
-  product_name: string;
-
   @Column({ type: 'jsonb', nullable: true })
   product_listImages: string[];
 
   @Column({ type: 'varchar', nullable: true, default: '' })
   product_thumbnail: string;
-
-  @Column({ type: 'varchar', nullable: false, default: '' })
-  product_description: string;
 
   @Column({ type: 'jsonb', nullable: false })
   product_attribute: object;
@@ -26,12 +20,12 @@ export class ProductEntity extends BaseEntity {
   @Column({ type: 'int', nullable: false, default: 0 })
   product_quantity: number;
 
-  @Column({ type: 'enum', nullable: false, enum: ['Facial', 'Body', 'Hair'] })
+  @Column({ type: 'varchar', nullable: false })
   product_category: string;
 
   @Column({
     type: 'float',
-    default: 4.5,
+    default: 5,
   })
   product_ratingsAverage: number;
 
@@ -40,6 +34,12 @@ export class ProductEntity extends BaseEntity {
 
   @Column({ default: true, select: true })
   isPublished: boolean;
+
+  @Column({ type: 'varchar', nullable: false })
+  product_name: string;
+
+  @Column({ type: 'varchar', nullable: false, default: '' })
+  product_description: string;
 
   @ManyToOne(() => UserEntity, (user) => user.products)
   user: UserEntity;

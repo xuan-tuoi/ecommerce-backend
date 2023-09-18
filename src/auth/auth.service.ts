@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Response,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
@@ -13,8 +14,9 @@ import { KeytokenService } from 'src/keytoken/keytoken.service';
 import { randomBytes } from 'crypto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { User } from 'src/users/user.interface';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { KeyToken } from 'src/keytoken/keyToken.interface';
+import { LoginDto } from './dto/login.dto';
 dotenv.config();
 
 @Injectable()
@@ -100,6 +102,11 @@ export class AuthService {
               new Date().getTime() + +process.env.JWT_EXPIRATION_TIME * 1000,
             ),
           },
+          keyStore: {
+            id: keyStore.id,
+            refreshToken: keyStore.refreshToken,
+            refreshTokenUsed: keyStore.refreshTokenUsed,
+          },
         };
       }
     } catch (error) {
@@ -107,17 +114,17 @@ export class AuthService {
     }
   }
 
-  async login(req: Request, res: Response) {
+  async login(loginDto: LoginDto, @Response() res) {
     try {
-      const user: User = req.body;
+      const { email, password, rememberPassword } = loginDto;
       const foundShop = await this.userService.findOne({
-        email: user.email,
+        email: email,
       });
       if (!foundShop) {
         return res.status(404).send({ message: 'User not found' });
       }
       //check password
-      const isMatch = await bcrypt.compare(user.password, foundShop.password);
+      const isMatch = await bcrypt.compare(password, foundShop.password);
       if (!isMatch) {
         return res.status(404).send({ message: 'password does not match' });
       }
@@ -145,20 +152,27 @@ export class AuthService {
       res.setHeader('authorization', token.accessToken);
       // return user, token
       return res.status(200).json({
-        ...token,
-        foundShop,
+        user: {
+          rememberPassword,
+          ...foundShop,
+        },
+        token: {
+          accessToken: token.accessToken,
+          refreshToken: token.refreshToken,
+          maxAge: new Date(
+            new Date().getTime() +
+              +process.env.JWT_EXPIRATION_TIME_TWO_MINUTES * 1000,
+          ),
+        },
       });
     } catch (error) {
-      console.error('Error during login:', error);
       return res.status(500).send({ message: 'An error occurred' });
     }
   }
 
   async logout(req: Request) {
+    console.log('keyStore', req['keyStore']);
     const keyStore = req['keyStore'];
-
-    console.log('keyStore', keyStore);
-
     // delete keyStore
     await this.keyTokenService.deleteKeyToken({
       id: keyStore.id,

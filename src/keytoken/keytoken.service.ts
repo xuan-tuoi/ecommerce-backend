@@ -54,7 +54,7 @@ export class KeytokenService {
         userId,
         refreshToken,
       });
-      return tokens ? tokens.publicKey : null;
+      return tokens;
     } catch (error) {
       throw new InternalServerErrorException(error);
     }

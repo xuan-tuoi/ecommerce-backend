@@ -5,11 +5,15 @@ import { AppModule } from './app.module';
 
 import * as compression from 'compression';
 import { ValidationPipe } from '@nestjs/common';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet());
   app.use(compression());
+  // Thêm cấu hình middleware để xử lý form-data
+  app.use(urlencoded({ limit: '50mb', extended: true }));
+  app.use(json({ limit: '50mb' }));
 
   const config = new DocumentBuilder()
     .setTitle('Beauty Ecommerce API')
@@ -29,7 +33,7 @@ async function bootstrap() {
   app.enableCors({
     origin: 'http://localhost:3000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Accept, Authorization',
+    allowedHeaders: 'Content-Type, Accept, Authorization, type, X-Client-Id',
     credentials: true,
   });
 

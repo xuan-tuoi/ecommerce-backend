@@ -25,3 +25,38 @@ export enum Sort {
   PRICE = 'price',
   NAME = 'name',
 }
+
+export const classifyCategoryByType = [
+  {
+    category: 'Body',
+    type: [
+      'Exfoliator',
+      'Bath Oil',
+      'Bath Salts',
+      'Body Wash',
+      'Mist',
+      'Sun protect',
+    ],
+  },
+  {
+    category: 'Hair',
+    type: [''],
+  },
+  {
+    category: 'Facial',
+    type: [
+      'Moisturiser',
+      'Balm',
+      'Eye Care',
+      'Eye cream',
+      'Cleanser',
+      'Treatment',
+      'Toner',
+      'Mask',
+      'Oil',
+      'Peel',
+      'Serum',
+      'Face Mask',
+    ],
+  },
+];

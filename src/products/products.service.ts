@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { classifyCategoryByType } from 'src/common/constant';
 import { PageDto } from 'src/common/dto/page.dto';
 import { PageMetaDto } from 'src/common/dto/pageMeta.dto';
 import { PageOptionsDto } from 'src/common/dto/pageOptions.dto';
@@ -80,8 +81,6 @@ export class ProductsService {
       const countItem: number = await queryBuilder.getCount();
       const listProducts = await queryBuilder.getMany();
 
-      console.log('listProducts', listProducts);
-
       const pageMetaDto: PageMetaDto = new PageMetaDto({
         itemCount: countItem,
         pageOptionsDto: options,
@@ -93,12 +92,7 @@ export class ProductsService {
     }
   }
 
-  public async searchProducts(
-    listQuery: SearchProductDto,
-    pageOptionsDto: PageOptionsDto,
-  ) {
-    console.log('listQuery', listQuery);
-    console.log('pageOptionsDto', pageOptionsDto);
+  public async searchProducts(listQuery: any, pageOptionsDto: PageOptionsDto) {
     const queryBuilder = this.productRepository.createQueryBuilder('products');
     const skip = (pageOptionsDto.page - 1) * pageOptionsDto.limit;
     queryBuilder
@@ -108,25 +102,34 @@ export class ProductsService {
       .orderBy(`products.${pageOptionsDto.sort}`, pageOptionsDto.order)
       .skip(skip)
       .take(pageOptionsDto.limit);
-    if (listQuery.product_name) {
-      queryBuilder.andWhere(
-        `products.product_name ilike '%${listQuery.product_name}%'`,
-      );
-    }
     if (listQuery.product_category) {
       const category =
         listQuery.product_category.charAt(0).toUpperCase() +
         listQuery.product_category.slice(1);
-      queryBuilder.andWhere(`products.product_category = '${category}'`);
+      // category : Facial, Body, Hair
+      // những sản phẩm có category là cleaner, toner, moisturizer, serum, mask, sunscreen là Facial
+      // những sản phẩm có category là shampoo, conditioner, hair mask, hair oil là Hair
+      // những sản phẩm có category là body wash, body lotion, body oil, body scrub, hand cream, foot cream là Body
+      const type = classifyCategoryByType.filter((item) => {
+        return item.category.includes(category);
+      });
+      queryBuilder.andWhere(`products.product_category in (:...type)`, {
+        type: type[0].type,
+      });
     }
     if (listQuery.product_shop) {
       queryBuilder.andWhere(
-        `products.product_shop ilike '%${listQuery.product_shop}%'`,
+        `user.username ilike '%${listQuery.product_shop}%'`,
+      );
+    }
+
+    if (listQuery.search_key) {
+      queryBuilder.andWhere(
+        `products.product_name ilike '%${listQuery.search_key}%'`,
       );
     }
 
     const query = queryBuilder.getQuery();
-    console.log('query', query);
 
     const countItem: number = await queryBuilder.getCount();
     const listProducts = await queryBuilder.getMany();
@@ -146,6 +149,107 @@ export class ProductsService {
     });
     return {
       message: 'Delete product successfully',
+    };
+  }
+
+  public async cloneData(products: any) {
+    const listSize = [
+      '3.4 oz/100mL',
+      '1.7 oz/50 mL',
+      '1 oz/30 mL',
+      '0.3 oz/10 mL',
+      '0.25 oz/7.5 mL',
+      '0.17 oz/5 mL',
+      '0.1 oz/3 mL',
+      '0.05 oz/1.5 mL',
+    ];
+    const listUser = [
+      {
+        id: '85a26cd1-4f5f-4468-b0ce-41118681234b',
+        username: 'Bioderma',
+      },
+      {
+        id: '9a420be2-4df3-4595-a500-2211de5a9701',
+        username: 'The Ordinary',
+      },
+    ];
+    const promises = products.map(async (product) => {
+      const newProduct = {
+        product_name: product.name || 'Default product name',
+        product_listImages: ['/product/default.png'],
+        product_thumbnail: '/product/default.png',
+        product_description: product.ingredients,
+        product_attribute: {
+          size: listSize[Math.floor(Math.random() * listSize.length)],
+          dry: product.dry,
+          oily: product.oily,
+          normal: product.normal,
+          sensitive: product.sensitive,
+        },
+        product_price: product.price,
+        product_quantity: Math.floor(Math.random() * 1000) + 1,
+        product_category:
+          product.label === 'Sun protect' ? 'Body' : product.label,
+        product_ratingsAverage:
+          product.rank < 4.6 ? +product.rank + 0.4 : product.rank,
+        isDraft: false,
+        isPublished: true,
+        user: listUser[Math.floor(Math.random() * listUser.length)],
+      };
+      const newProductEntity = await this.productRepository.create(newProduct);
+      return await this.productRepository.save(newProductEntity);
+    });
+
+    const res = await Promise.all(promises);
+    return {
+      mess: 'Clone data successfully',
+    };
+  }
+
+  public async cloneDataV2(products: any) {
+    const listSize = [
+      '3.4 oz/100mL',
+      '1.7 oz/50 mL',
+      '1 oz/30 mL',
+      '0.3 oz/10 mL',
+      '0.25 oz/7.5 mL',
+      '0.17 oz/5 mL',
+      '0.1 oz/3 mL',
+      '0.05 oz/1.5 mL',
+    ];
+
+    const promises = products.map(async (product) => {
+      const newProduct = {
+        product_name: product.name || 'Default product name',
+        product_listImages: ['/product/default.png'],
+        product_thumbnail: product.product_url.includes('html')
+          ? '/product/default.png'
+          : product.product_url,
+        product_description: product.clean_ingreds[0],
+        product_attribute: {
+          size: listSize[Math.floor(Math.random() * listSize.length)],
+          dry: product.dry || 1,
+          oily: product.oily || 1,
+          normal: product.normal || 1,
+          sensitive: product.sensitive || 1,
+        },
+        product_price: product.price.substring(1),
+        product_quantity: Math.floor(Math.random() * 1000) + 1,
+        product_category: product.product_type,
+        product_ratingsAverage: Math.floor(Math.random() * (5 - 4.5 + 1) + 4.5),
+        isDraft: false,
+        isPublished: true,
+        user: {
+          id: 'db7c6b7e-8e2f-42ee-a63b-332656d82ca2',
+          username: `L'Oréal`,
+        },
+      };
+      const newProductEntity = await this.productRepository.create(newProduct);
+      return await this.productRepository.save(newProductEntity);
+    });
+    await Promise.all(promises);
+    return {
+      message: 'Clone data successfully',
     };
   }
 }
