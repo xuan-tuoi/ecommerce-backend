@@ -14,7 +14,7 @@ export class VoucherEntity extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: ['percent', 'fix_amount'],
+    enum: ['percent', 'fixed_amount'],
     default: 'fixed_amount',
   })
   voucher_type: string;

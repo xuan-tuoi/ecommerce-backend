@@ -171,7 +171,6 @@ export class AuthService {
   }
 
   async logout(req: Request) {
-    console.log('keyStore', req['keyStore']);
     const keyStore = req['keyStore'];
     // delete keyStore
     await this.keyTokenService.deleteKeyToken({

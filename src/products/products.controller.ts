@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Delete,
   Get,
@@ -21,6 +22,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { SearchProductDto } from './dto/search-product.dto';
 import { ProductsService } from './products.service';
 import * as MOCKED_RESPONSE_TS from '../../public/files/skincare_products_clean.json';
+import { SimilarProductDto } from './dto/similar-product';
 
 @Controller('v1/products')
 export class ProductsController {
@@ -28,6 +30,29 @@ export class ProductsController {
     private readonly productsService: ProductsService,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
+
+  /**
+   * Lấy 1 sản phẩm đã published theo product_id
+   * [USER]
+   * @param productId string
+   * @returns product
+   */
+  @Get()
+  async getProductById(@Query('id') productId: string) {
+    return await this.productsService.getProductById(productId);
+  }
+
+  /**
+   * Lấy danh sách sản phẩm similar với 1 sản phẩm theo product_id
+   * [USER]
+   * @param productId string
+   * @returns product
+   */
+  @Get('/similar-product')
+  async getSimilarProducts(@Query() queryOptions: SimilarProductDto) {
+    console.log('getting -----------');
+    return await this.productsService.getSimilarProducts(queryOptions);
+  }
 
   /**
    * lấy danh sách sản phẩm theo brand, category và theo tên sản phẩm
@@ -75,17 +100,6 @@ export class ProductsController {
     return await this.productsService.getProductsByShopId(shopId, options);
   }
 
-  /**
-   * Lấy 1 sản phẩm đã published theo product_id
-   * [USER]
-   * @param productId string
-   * @returns product
-   */
-  @Get('/:productId')
-  async getProductById(@Param('productId') productId: string) {
-    return await this.productsService.getProductById(productId);
-  }
-
   @Post('/clone-data')
   @UseInterceptors(
     FileInterceptor('file_asset', {
@@ -117,6 +131,12 @@ export class ProductsController {
     return await this.productsService.cloneData(parsedCsv.data);
   }
 
+  @Get('/craw-data/website')
+  async crawData() {
+    // return 'hello';
+    return await this.productsService.crawData();
+  }
+
   @Post('/clone-data-or')
   async cloneDataOr() {
     const data = MOCKED_RESPONSE_TS;
@@ -138,15 +158,16 @@ export class ProductsController {
   ) {
     try {
       // const user = req['user'];
-      console.log('file -------------> ', files);
-      // const imageUri = await this.cloudinaryService.uploadImage(
-      //   // user.email,
-      //   'test',
-      //   file,
-      // );
+      const promises = files.map(async (file) => {
+        const imgUri = await this.cloudinaryService.uploadImage(file);
+        return imgUri;
+      });
+
+      const imageUri = await Promise.all(promises);
+
       // return await this.productsService.createProduct(user, imageUri.url, body);
       return {
-        mes: 'oke',
+        mes: imageUri,
       };
     } catch (error) {
       return new BadRequestException(error.message);

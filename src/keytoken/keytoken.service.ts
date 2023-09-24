@@ -73,7 +73,6 @@ export class KeytokenService {
 
   public async deleteKeyToken({ id }: { id: string }) {
     try {
-      console.log('id', id);
       return await this.keyTokenEntity.delete({
         id,
       });

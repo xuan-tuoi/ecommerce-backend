@@ -25,7 +25,6 @@ export class AuthenticationMiddleware implements NestMiddleware {
     }
     // b2. get access token from tokenService ?
     const keyStore = await this.keyTokenService.getKeyToken({ userId });
-    console.log('keyStore::::::::::', keyStore);
     if (!keyStore) {
       throw new BadRequestException('Invalid client id');
     }

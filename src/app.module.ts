@@ -17,6 +17,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { VoucherModule } from './voucher/voucher.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { CartModule } from './cart/cart.module';
 
 dotenv.config();
 
@@ -29,8 +30,6 @@ const defaultOptions = {
   synchronize: true,
   namingStrategy: new SnakeNamingStrategy(),
 };
-
-console.log('defaultOptions', defaultOptions);
 
 @Module({
   imports: [
@@ -64,6 +63,7 @@ console.log('defaultOptions', defaultOptions);
     CloudinaryModule,
     ReviewsModule,
     VoucherModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [

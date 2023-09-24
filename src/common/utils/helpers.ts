@@ -30,7 +30,6 @@ export const removeUndefined = (obj: any) => {
   // { product_category: 'undefined', product_shop: 'undefined' }
   // return {}
   const tmp = Object.keys(obj).reduce((acc, key) => {
-    console.log('obj[key]', obj[key] === 'undefined');
     if (
       obj[key] !== 'undefined' &&
       obj[key] !== undefined &&
@@ -39,10 +38,8 @@ export const removeUndefined = (obj: any) => {
       obj[key] !== ''
     ) {
       acc[key] = obj[key];
-      console.log('acc', acc);
     }
     return acc;
   }, {});
-  console.log('tmp------->', tmp);
   return tmp;
 };

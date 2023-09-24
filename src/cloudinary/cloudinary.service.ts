@@ -17,13 +17,15 @@ export class CloudinaryService {
   }
 
   async uploadImage(
-    idShop: string,
+    // idShop: string,
     file: Express.Multer.File,
   ): Promise<CloudinaryResponse> {
     try {
       return new Promise<CloudinaryResponse>(async (resolve, reject) => {
         // const publicId = `ecommerce/${idShop}/${getImgName(file.originalname)}`;
-        const publicId = `ecommerce/${idShop}/${file.originalname}`;
+        const now = new Date();
+
+        const publicId = `ecommerce/products/${now.getTime()}`;
         const uploadStream = await cloudinary.uploader.upload_stream(
           { public_id: publicId }, //
           (error, result) => {
@@ -35,7 +37,6 @@ export class CloudinaryService {
         streamifier.createReadStream(file.buffer).pipe(uploadStream);
       });
     } catch (error) {
-      console.log('error', error);
       throw new Error(error);
     }
   }
