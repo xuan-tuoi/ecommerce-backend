@@ -50,7 +50,6 @@ export class ProductsController {
    */
   @Get('/similar-product')
   async getSimilarProducts(@Query() queryOptions: SimilarProductDto) {
-    console.log('getting -----------');
     return await this.productsService.getSimilarProducts(queryOptions);
   }
 

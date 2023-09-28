@@ -1,5 +1,6 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { Column, Entity } from 'typeorm';
+import { UserEntity } from 'src/users/entities/user.entity';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 
 @Entity('carts')
 export class CartEntity extends BaseEntity {
@@ -9,14 +10,15 @@ export class CartEntity extends BaseEntity {
     default: 'active',
     enum: ['active', 'completed', 'failed', 'pending'],
   })
-  cart_status;
+  cart_status: string;
 
   @Column({ type: 'int', nullable: false, default: 0 })
   cart_count_product: number;
 
-  @Column({ type: 'jsonb', nullable: false, default: [] })
+  @Column({ type: 'jsonb', nullable: true, default: [] })
   cart_products: object[];
 
-  @Column({ type: 'varchar', nullable: false, default: '' })
-  cart_userId: string;
+  @OneToOne(() => UserEntity, { nullable: true })
+  @JoinColumn()
+  user: UserEntity;
 }

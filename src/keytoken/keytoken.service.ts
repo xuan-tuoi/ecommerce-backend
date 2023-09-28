@@ -34,6 +34,10 @@ export class KeytokenService {
     userId: string;
     refreshToken?: string;
   }) {
+    console.log(
+      '========create key token ------- refresh token recieve is ====',
+      refreshToken,
+    );
     try {
       const isExistKeyToken = await this.keyTokenEntity.findOne({
         where: {

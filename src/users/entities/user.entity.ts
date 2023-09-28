@@ -1,7 +1,8 @@
+import { CartEntity } from 'src/cart/entities/cart.entity';
 import { BaseEntity } from 'src/common/entities/base.entity';
 import { ProductEntity } from 'src/products/entities/product.entity';
 import { ReviewEntity } from 'src/reviews/entities/review.entity';
-import { Column, Entity, Index, OneToMany } from 'typeorm';
+import { Column, Entity, Index, OneToMany, OneToOne } from 'typeorm';
 
 @Entity('users')
 export class UserEntity extends BaseEntity {
@@ -48,4 +49,7 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => ReviewEntity, (reviews) => reviews.user)
   reviews: ReviewEntity[];
+
+  @OneToOne(() => CartEntity, (cart) => cart.user)
+  cart: CartEntity;
 }

@@ -24,6 +24,7 @@ export class AuthenticationMiddleware implements NestMiddleware {
       throw new BadRequestException('Missing client id');
     }
     // b2. get access token from tokenService ?
+    console.log('userId', userId);
     const keyStore = await this.keyTokenService.getKeyToken({ userId });
     if (!keyStore) {
       throw new BadRequestException('Invalid client id');
@@ -35,8 +36,9 @@ export class AuthenticationMiddleware implements NestMiddleware {
           secret: keyStore.privateKey,
         });
         if (userId !== decoder.id) {
-          throw new BadRequestException('Invalid refresh token');
+          throw new BadRequestException('Invalid user id  ');
         }
+        console.log('---------key store after decode is::::::::', keyStore);
         req['keyStore'] = keyStore;
         req['user'] = decoder;
         req['refreshToken'] = refreshToken;

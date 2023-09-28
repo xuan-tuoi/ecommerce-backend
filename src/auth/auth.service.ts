@@ -102,11 +102,6 @@ export class AuthService {
               new Date().getTime() + +process.env.JWT_EXPIRATION_TIME * 1000,
             ),
           },
-          keyStore: {
-            id: keyStore.id,
-            refreshToken: keyStore.refreshToken,
-            refreshTokenUsed: keyStore.refreshTokenUsed,
-          },
         };
       }
     } catch (error) {
@@ -140,6 +135,7 @@ export class AuthService {
         publickey,
         privatekey,
       );
+      console.log('-----------login---- token is ---', token);
       await this.keyTokenService.createKeyToken({
         privateKey: privatekey,
         publicKey: publickey,
@@ -223,8 +219,17 @@ export class AuthService {
       newRefreshToken: tokens.refreshToken,
     });
     return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
+      user: {
+        ...foundShop,
+      },
+      token: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        maxAge: new Date(
+          new Date().getTime() +
+            +process.env.JWT_REFRESH_EXPIRATION_TIME * 1000,
+        ),
+      },
     };
   }
 }
