@@ -130,7 +130,7 @@ export class ProductsController {
     return await this.productsService.cloneData(parsedCsv.data);
   }
 
-  @Get('/craw-data/website')
+  @Post('/craw-data/website')
   async crawData() {
     // return 'hello';
     return await this.productsService.crawData();

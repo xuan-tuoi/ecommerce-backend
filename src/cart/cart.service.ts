@@ -17,6 +17,28 @@ export class CartService {
     private readonly usersService: UsersService,
     private readonly productsService: ProductsService,
   ) {}
+
+  public async findOne(userId: string) {
+    const cart = await this.cartRepository.findOne({
+      where: {
+        user: {
+          id: userId,
+        },
+      },
+    });
+    if (!cart) {
+      throw new BadRequestException('Cart not found');
+    }
+    return cart;
+  }
+
+  public async save(cart: CartEntity) {
+    return this.cartRepository.save(cart);
+  }
+
+  public async deletecart(cart: CartEntity) {
+    return this.cartRepository.remove(cart);
+  }
   /**
    * @param userId string
    * @returns infor for getting count product in cart
@@ -118,6 +140,20 @@ export class CartService {
       });
 
       const { productId, price, quantity, shopId } = product;
+
+      // check sản phẩm còn hàng hay không
+      const productInStock = await this.productsService
+        .findOne(productId)
+        .catch((err) => {
+          throw new BadRequestException(err.message);
+        });
+
+      if (productInStock.product_quantity === 0) {
+        throw new BadRequestException(
+          `${productInStock.product_name.slice(0, 30)}... is out of stock`,
+        );
+      }
+
       if (!cart) {
         // create new cart for user
         const newCart = new CartEntity();
@@ -182,7 +218,7 @@ export class CartService {
         cart: cart,
       };
     } catch (error) {
-      throw new BadRequestException('Add to cart failed:::::::::::' + error);
+      throw new BadRequestException(error);
     }
   }
 

@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 
 import * as bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import * as dotenv from 'dotenv';
 import { RoleOfuser, saltOrRounds } from 'src/common/constant';
 import { KeytokenService } from 'src/keytoken/keytoken.service';
@@ -29,16 +30,18 @@ export class AuthService {
 
   async createTokenPair(payload, publicKey, privateKey) {
     try {
-      const accessToken = await this.jwtService.sign(payload, {
+      const accessToken = this.jwtService.sign(payload, {
         secret: publicKey,
+        expiresIn: `${process.env.JWT_EXPIRATION_TIME}s`,
       });
-      const refreshToken = await this.jwtService.sign(payload, {
+      const refreshToken = this.jwtService.sign(payload, {
         secret: privateKey,
+        expiresIn: `${process.env.JWT_REFRESH_EXPIRATION_TIME}s`,
       });
 
-      this.jwtService.verify(accessToken, {
-        secret: publicKey,
-      });
+      // this.jwtService.verify(accessToken, {
+      //   secret: publicKey,
+      // });
       return {
         accessToken,
         refreshToken,
@@ -56,12 +59,12 @@ export class AuthService {
           throw new BadRequestException(error);
         });
       if (existUser) {
-        return new BadRequestException('Email already exists');
+        throw new BadRequestException('Email already exists');
       }
       //regex email must have contain @ and .com
       const regex = /[a-z0-9]+@[a-z]+\.[a-z]{2,3}/;
       if (!regex.test(user.email)) {
-        return new BadRequestException('Email is not valid');
+        throw new BadRequestException('Email is not valid');
       }
       // hash password
       const passwordHash = await bcrypt.hash(user.password, saltOrRounds);
@@ -72,16 +75,16 @@ export class AuthService {
       });
 
       if (newUser) {
-        const privateKey = randomBytes(16).toString();
-        const publicKey = randomBytes(16).toString();
+        const privateKey = randomBytes(32);
+        const publicKey = randomBytes(32);
 
         const keyStore = await this.keyTokenService.createKeyToken({
-          privateKey: privateKey.toString(),
-          publicKey: publicKey.toString(),
+          privateKey: privateKey.toString('hex'),
+          publicKey: publicKey.toString('hex'),
           userId: newUser.id,
         });
         if (!keyStore) {
-          return new Error('Create key token fail');
+          throw new Error('Create key token fail');
         }
 
         //create token and refreshToken
@@ -90,9 +93,17 @@ export class AuthService {
             id: newUser.id,
             email: newUser.email,
           },
-          publicKey.toString(),
-          privateKey.toString(),
+          publicKey.toString('hex'),
+          privateKey.toString('hex'),
         );
+        // save refresh token to DB
+        await this.keyTokenService.createKeyToken({
+          privateKey: privateKey.toString('hex'),
+          publicKey: publicKey.toString('hex'),
+          refreshToken: token.refreshToken,
+          userId: newUser.id,
+        });
+
         return {
           user: newUser,
           token: {
@@ -105,7 +116,7 @@ export class AuthService {
         };
       }
     } catch (error) {
-      return new Error(error);
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -124,8 +135,8 @@ export class AuthService {
         return res.status(404).send({ message: 'password does not match' });
       }
       // create publickey and privatekey
-      const privatekey = randomBytes(32).toString();
-      const publickey = randomBytes(32).toString();
+      const privatekey = randomBytes(32).toString('hex');
+      const publickey = randomBytes(32).toString('hex');
       const token = await this.createTokenPair(
         {
           id: foundShop.id,
@@ -135,7 +146,7 @@ export class AuthService {
         publickey,
         privatekey,
       );
-      console.log('-----------login---- token is ---', token);
+      console.log('token in LOGIN ----->', token);
       await this.keyTokenService.createKeyToken({
         privateKey: privatekey,
         publicKey: publickey,
@@ -156,8 +167,7 @@ export class AuthService {
           accessToken: token.accessToken,
           refreshToken: token.refreshToken,
           maxAge: new Date(
-            new Date().getTime() +
-              +process.env.JWT_EXPIRATION_TIME_TWO_MINUTES * 1000,
+            new Date().getTime() + +process.env.JWT_EXPIRATION_TIME * 1000,
           ),
         },
       });
@@ -212,6 +222,7 @@ export class AuthService {
       keyStore.publicKey,
       keyStore.privateKey,
     );
+    console.log('tokens in refresh API ---->', tokens);
     //update keytoken cũ trong DB
     await this.keyTokenService.updateKeyToken({
       id: keyStore.id,
@@ -226,8 +237,7 @@ export class AuthService {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         maxAge: new Date(
-          new Date().getTime() +
-            +process.env.JWT_REFRESH_EXPIRATION_TIME * 1000,
+          new Date().getTime() + +process.env.JWT_EXPIRATION_TIME * 1000,
         ),
       },
     };

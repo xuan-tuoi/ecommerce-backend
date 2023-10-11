@@ -1,7 +1,9 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
+import { OrderEntity } from 'src/orders/entities/order.entity';
+import { OrderProductEntity } from 'src/order_product/entities/orderProduct.entity';
 import { ReviewEntity } from 'src/reviews/entities/review.entity';
 import { UserEntity } from 'src/users/entities/user.entity';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('products')
 export class ProductEntity extends BaseEntity {
@@ -22,6 +24,13 @@ export class ProductEntity extends BaseEntity {
 
   @Column({ type: 'varchar', nullable: false })
   product_category: string;
+
+  @Column({
+    type: 'enum',
+    enum: ['inStock', 'outOfStock', 'preOrder'],
+    default: 'inStock',
+  })
+  product_status: string;
 
   @Column({
     type: 'float',
@@ -46,4 +55,7 @@ export class ProductEntity extends BaseEntity {
 
   @OneToMany(() => ReviewEntity, (reviews) => reviews.product)
   reviews: ReviewEntity[];
+
+  @OneToMany(() => OrderProductEntity, (orderProduct) => orderProduct.product)
+  orderProduct: OrderProductEntity[];
 }

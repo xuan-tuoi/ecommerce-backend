@@ -3,6 +3,8 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
   username: string;
+  gender: string;
+  age: string;
   password: string;
   email: string;
   status: string;
@@ -11,7 +13,11 @@ export interface User {
   role: string;
   products: any[];
   reviews: any[];
+  vouchers: any[];
+  historyVoucher: any[];
+  shopVouchers: any[];
   cart: any;
   attribute: object;
   isDeleted: boolean;
+  order: any;
 }

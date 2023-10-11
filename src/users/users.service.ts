@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
@@ -49,5 +44,19 @@ export class UsersService {
       throw new BadRequestException(err);
     });
     return user;
+  }
+
+  async updateUser(id: string, userDto) {
+    const user = await this.getUserById(id);
+    const updatedUser = await this.usersRepository
+      .save({ ...user, ...userDto })
+      .catch((err) => {
+        throw new BadRequestException(err);
+      });
+    return updatedUser;
+  }
+
+  async save(user: User): Promise<User> {
+    return await this.usersRepository.save(user);
   }
 }

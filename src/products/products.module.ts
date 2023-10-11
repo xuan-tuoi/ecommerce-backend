@@ -40,9 +40,9 @@ export class ProductsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(AuthenticationMiddleware).forRoutes(
       // Define routes that should use the middleware
-      { path: 'api/v1/products', method: RequestMethod.PUT },
+      { path: '/v1/products', method: RequestMethod.PUT },
       {
-        path: '/api/v1/products/:productId',
+        path: '/v1/products/:productId',
         method: RequestMethod.DELETE,
       },
       // Add more routes here if needed

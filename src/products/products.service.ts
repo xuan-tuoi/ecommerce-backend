@@ -27,6 +27,28 @@ export class ProductsService {
     private readonly productRepository: Repository<ProductEntity>,
     private readonly userService: UsersService,
   ) {}
+
+  public async save(product: ProductEntity) {
+    return await this.productRepository.save(product);
+  }
+
+  public async findOne(productId: string) {
+    if (!productId) {
+      throw new HttpException('Product not found', HttpStatus.BAD_REQUEST);
+    }
+    const product = await this.productRepository.findOne({
+      where: {
+        id: productId,
+        isDeleted: false,
+      },
+    });
+
+    if (!product) {
+      throw new HttpException('Product not found', HttpStatus.BAD_REQUEST);
+    }
+    return product;
+  }
+
   public async createProduct(
     user: User,
     imageUri: string,
@@ -142,8 +164,6 @@ export class ProductsService {
         `products.product_name ilike '%${listQuery.search_key}%'`,
       );
     }
-
-    const query = queryBuilder.getQuery();
 
     const countItem: number = await queryBuilder.getCount();
     const listProducts = await queryBuilder.getMany();
@@ -312,20 +332,33 @@ export class ProductsService {
 
   public async crawData() {
     const categoryList = [
-      'Exfoliator',
-      'Bath Oil',
-      'Bath Salts',
-      'Body Wash',
-      'Mist',
-      'Sun protect',
-      'Hair',
-      'Balm',
-      'Eye Care',
-      'Eye cream',
-      'Mask',
-      'Oil',
-      'Peel',
-      'Face Mask',
+      // 'Exfoliator',
+      // 'Bath Oil',
+      // 'Bath Salts',
+      // 'Body Wash',
+      // 'Mist',
+      // 'Sun protect',
+      // 'Hair',
+      // 'Balm',
+      // 'Eye Care',
+      // 'Eye cream',
+      // 'Mask',
+      // 'Oil',
+      // 'Peptide',
+      // 'Face Mask',
+      // 'Mask',
+      // 'HA',
+      'Cream',
+      // 'Gel',
+      // 'Serum',
+      // 'Moisturizer',
+      // 'Face Wash',
+      // 'Cleansing',
+      'Sun cream',
+      // 'Shower oil',
+      // 'Sunscreen',
+      // 'Cleansing oil',
+      // 'Peel',
     ];
     const listSize = [
       '3.4 oz/100mL',
@@ -339,7 +372,7 @@ export class ProductsService {
     ];
     try {
       const baseUrl =
-        'https://www.lookfantastic.com/health-beauty/face/skincare-products.list?pageNumber=1&facetFilters=en_brand_content:CeraVe';
+        'https://www.lookfantastic.com/brands/bioderma/suncare.list';
       const response = await axios.get(baseUrl);
       const htmlData = response.data;
 
@@ -350,33 +383,32 @@ export class ProductsService {
       const listProduct = listProductWrapper.querySelectorAll(
         '.productListProducts_product:not(.sponsoredProductsLis)',
       ); // include 45 items
-      console.log(
-        'LEGNTH:::::::::::::',
-        Array.from(listProduct).splice(4).length,
-      );
-      const listPromises = Array.from(listProduct)
-        .splice(3)
-        .map(async (product: HTMLElement, index: number) => {
-          console.log('==================start at index', index);
-          const imgSrc = product.querySelector('img').src;
+
+      const listPromises = Array.from(listProduct).map(
+        async (product: HTMLElement, index: number) => {
+          console.log('--------------------START AT INDEX------', index);
+          let imgSrc =
+            'https://climate.onep.go.th/wp-content/uploads/2020/01/default-image.jpg';
+          if (product.querySelector('img')) {
+            imgSrc = product.querySelector('img').src;
+          }
           const name = product
             .querySelector('.productBlock_productName')
             .textContent.trim();
-          console.log('name------------------------->', name);
+
           const priceTmp = product.querySelector(
             '.productBlock_priceValue',
           ).textContent; // $7.90
-          console.log('priceTmp------------------------->', priceTmp);
           // rank random from 4.5 to 5
           const rank = Math.floor(Math.random() * (5 - 4.5 + 1) + 4.5);
 
-          const price = priceTmp.substring(1);
-          const category = categoryList[Math.floor(Math.random() * 4)];
+          const price = +priceTmp.substring(1) * 25616;
+          const category =
+            categoryList[Math.floor(Math.random() * categoryList.length) || 0];
           const size = listSize[Math.floor(Math.random() * listSize.length)];
-          const quantity = product.querySelector(
-            '.productBlock_reviewCount',
-          ).textContent;
-          console.log('quantity------------------------->', quantity);
+          const quantity = product.querySelector('.productBlock_reviewCount')
+            ? product.querySelector('.productBlock_reviewCount').textContent
+            : 50;
 
           const user = {
             // id: '9a420be2-4df3-4595-a500-2211de5a9701',
@@ -395,54 +427,72 @@ export class ProductsService {
           const productHtmlData = productResponse.data;
           const { window: productWindow } = new JSDOM(productHtmlData);
           const productDocument = productWindow.document;
+          let description = '';
+          let cleanIngredients = '';
+          let useage = '';
 
+          // get list image preview
+          const listImagePreview = productDocument.querySelectorAll(
+            'li.athenaProductImageCarousel_listItem',
+          );
+
+          // https://static.thcdn.com/images/large/webp//productimg/1600/1600/12753472-1314927999939659.jpg
+          // https://static.thcdn.com/images/small/webp//productimg/130/130/12753472-1314927999939659.jpg
+
+          const listImage = Array.from(listImagePreview).map(
+            (preview: HTMLElement) => {
+              if (!preview.querySelector('img')) {
+                return 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJzRGkvN9WVysP2_3AbXtdgTegy9mEELt2yFirxQymBg&s';
+              }
+              const url = preview.querySelector('img').src;
+              const urlLarge = url.replace('130/130', '1600/1600');
+              return urlLarge;
+            },
+          );
           const descriptionWrapper = productDocument.querySelector(
             '.productDescription_contentPropertyListItem_synopsis',
           );
-          const listDescription = descriptionWrapper.querySelectorAll('p');
-          const description = Array.from(listDescription)
-            .map((item: HTMLElement) => item.textContent)
-            .join('/ENTER/');
+          if (descriptionWrapper) {
+            const listDescription = descriptionWrapper.querySelectorAll('p');
+            description = Array.from(listDescription)
+              .map((item: HTMLElement) => item.textContent)
+              .join('/ENTER/');
+          }
 
-          console.log('description------------------------->', description);
-
-          //productDescription_contentPropertyListItem productDescription_contentPropertyListItem_directions productDescription_contentPropertyListItem-active
           const useageWrapper = productDocument.querySelector(
             '.productDescription_contentPropertyListItem_directions',
           );
-          let listUseage = useageWrapper.querySelectorAll('li');
-          if (listUseage.length === 0) {
-            listUseage = useageWrapper.querySelectorAll('p');
+          if (useageWrapper) {
+            let listUseage = useageWrapper.querySelectorAll('li');
+            if (listUseage.length === 0) {
+              listUseage = useageWrapper.querySelectorAll('p');
+            }
+
+            useage = Array.from(listUseage)
+              .map((item: HTMLElement) => item.textContent)
+              .join('/ENTER/');
           }
-
-          const useage = Array.from(listUseage)
-            .map((item: HTMLElement) => item.textContent)
-            .join('/ENTER/');
-
-          console.log('useage------------------------->', useage);
 
           const cleanIngredientsWrapper = productDocument.querySelector(
             '.productDescription_contentPropertyListItem_ingredients',
           );
-          let listCleanIngredients =
-            cleanIngredientsWrapper.querySelectorAll('li');
-          if (listCleanIngredients.length === 0) {
-            listCleanIngredients =
-              cleanIngredientsWrapper.querySelectorAll('p');
-          }
+          if (cleanIngredientsWrapper) {
+            let listCleanIngredients =
+              cleanIngredientsWrapper.querySelectorAll('li');
+            if (listCleanIngredients.length === 0) {
+              listCleanIngredients =
+                cleanIngredientsWrapper.querySelectorAll('p');
+            }
 
-          const cleanIngredients = Array.from(listCleanIngredients)
-            .map((item: HTMLElement) => item.textContent)
-            .join('/ENTER/');
-          console.log(
-            'cleanIngredients------------------------->',
-            cleanIngredients,
-          );
+            cleanIngredients = Array.from(listCleanIngredients)
+              .map((item: HTMLElement) => item.textContent)
+              .join('/ENTER/');
+          }
 
           // create product and save to db
           const newProduct: any = {
             product_name: name,
-            product_listImages: ['/product/default.png'],
+            product_listImages: listImage,
             product_thumbnail: imgSrc,
             product_description: description,
             product_attribute: {
@@ -462,6 +512,7 @@ export class ProductsService {
           const benefitWrapper = productDocument.querySelector(
             '.productDescription_contentPropertyListItem_strengthDetail',
           );
+
           if (benefitWrapper) {
             const listBenefit = benefitWrapper.querySelectorAll('li');
             const benefits = Array.from(listBenefit)
@@ -474,9 +525,9 @@ export class ProductsService {
             newProduct,
           );
           await this.productRepository.save(newProductEntity);
-          console.log('==================END at index', index);
           return newProductEntity;
-        });
+        },
+      );
       const listProductData = await Promise.all(listPromises);
       return {
         message: listProductData,

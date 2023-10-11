@@ -18,6 +18,9 @@ import { VoucherModule } from './voucher/voucher.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { CartModule } from './cart/cart.module';
+import { HistoryVoucherModule } from './history-voucher/history-voucher.module';
+import { OrdersModule } from './orders/orders.module';
+import { OrderProductModule } from './order_product/order_product.module';
 
 dotenv.config();
 
@@ -64,6 +67,9 @@ const defaultOptions = {
     ReviewsModule,
     VoucherModule,
     CartModule,
+    HistoryVoucherModule,
+    OrdersModule,
+    OrderProductModule,
   ],
   controllers: [AppController],
   providers: [

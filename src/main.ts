@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import * as compression from 'compression';
 import { ValidationPipe } from '@nestjs/common';
 import { json, urlencoded } from 'express';
+import { ExceptionsLoggerFilter } from './common/utils/exceptionLogger.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,10 +29,16 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  // Kích hoạt middleware error
+  app.useGlobalFilters(new ExceptionsLoggerFilter());
+
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: [
+      'http://localhost:3000',
+      'https://beauty-ecommerce-nine.vercel.app',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders:
       'Content-Type, Accept, Authorization, type, X-Client-Id , X-Rtoken-Id',

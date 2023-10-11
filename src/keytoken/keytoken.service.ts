@@ -17,12 +17,14 @@ export class KeytokenService {
           userId,
         },
       });
+      console.log('userId is =====', userId);
       return keyToken;
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
   }
 
+  // save token and key to DB
   public async createKeyToken({
     privateKey,
     publicKey,
@@ -34,10 +36,6 @@ export class KeytokenService {
     userId: string;
     refreshToken?: string;
   }) {
-    console.log(
-      '========create key token ------- refresh token recieve is ====',
-      refreshToken,
-    );
     try {
       const isExistKeyToken = await this.keyTokenEntity.findOne({
         where: {

@@ -24,7 +24,6 @@ export class AuthenticationMiddleware implements NestMiddleware {
       throw new BadRequestException('Missing client id');
     }
     // b2. get access token from tokenService ?
-    console.log('userId', userId);
     const keyStore = await this.keyTokenService.getKeyToken({ userId });
     if (!keyStore) {
       throw new BadRequestException('Invalid client id');
@@ -32,9 +31,13 @@ export class AuthenticationMiddleware implements NestMiddleware {
     if (req.headers[HEADER.REFRESHTOKEN]) {
       try {
         const refreshToken = req.headers[HEADER.REFRESHTOKEN].toString();
+        console.log('refreshToken in middleware is -----', refreshToken);
+
         const decoder = await this.jwtService.verifyAsync(refreshToken, {
           secret: keyStore.privateKey,
         });
+        console.log('decoder', decoder);
+
         if (userId !== decoder.id) {
           throw new BadRequestException('Invalid user id  ');
         }
@@ -44,7 +47,8 @@ export class AuthenticationMiddleware implements NestMiddleware {
         req['refreshToken'] = refreshToken;
         return next();
       } catch (error) {
-        throw new BadRequestException('Invalid refresh token');
+        console.log('error', error);
+        throw new BadRequestException('Invalid refresh token', error);
       }
     }
     const accessToken = req.headers[HEADER.AUTHORIZATION]?.toString();
@@ -63,6 +67,7 @@ export class AuthenticationMiddleware implements NestMiddleware {
       req['user'] = decoder;
       return next();
     } catch (error) {
+      console.log('error', error);
       throw new BadRequestException('Invalid access token');
     }
   }

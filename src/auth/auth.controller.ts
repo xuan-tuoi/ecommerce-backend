@@ -29,7 +29,6 @@ export class AuthController {
   @HttpCode(200)
   @Post('refresh-token')
   async refreshToken(@Req() req: Request) {
-    console.log(' ============= req at refresh token is::::;', req);
     const keyStore = req['keyStore'];
     const user = req['user'];
     const refreshToken = req['refreshToken'];
