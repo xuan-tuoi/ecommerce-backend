@@ -31,7 +31,7 @@ export const classifyCategoryByType = [
     category: 'Body',
     type: [
       'Exfoliator',
-      'Bath Oil',
+      'Body Lotion',
       'Bath Salts',
       'Body Wash',
       'Mist',
@@ -40,7 +40,7 @@ export const classifyCategoryByType = [
   },
   {
     category: 'Hair',
-    type: [''],
+    type: ['Hair'],
   },
   {
     category: 'Facial',

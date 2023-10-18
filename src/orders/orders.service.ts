@@ -180,12 +180,17 @@ export class OrdersService {
     const listOrdersWithProducts = listOrders.map(async (order: any) => {
       const listOrderProducts =
         await this.orderProductService.getAllOrderProductsOfOrder(order.id);
+
       const listProducts = listOrderProducts.map(async (orderProduct: any) => {
         const product = orderProduct.product;
+        const quantity = orderProduct.quantity;
         const productInfo = await this.productService.getProductById(
           product.id,
         );
-        return productInfo;
+        return {
+          ...productInfo,
+          quantityToBuy: quantity,
+        };
       });
       order.products = await Promise.all(listProducts);
       return order;

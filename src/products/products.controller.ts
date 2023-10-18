@@ -63,6 +63,7 @@ export class ProductsController {
   async searchProducts(
     @Query() queryOptions: SearchProductDto,
     @Query() pageOptionsDto: PageOptionsDto,
+    // @Param('userId') userId: string,
   ) {
     const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
     options.limit = options.limit > 100 ? 100 : options.limit;
@@ -71,12 +72,19 @@ export class ProductsController {
       'product_shop',
       'search_key',
     ]);
+
+    const userId = queryOptions.user_id;
     return await this.productsService.searchProducts(
       removeUndefined(listQuery),
       options,
+      userId,
     );
   }
 
+  @Get('/best-seller')
+  async getBestSellerProducts() {
+    return await this.productsService.getBestSellerProducts();
+  }
   /**
    *  Lấy tất cả sản phẩm đã published của 1 shop theo shopId
    * [USER]

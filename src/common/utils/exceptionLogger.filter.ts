@@ -13,10 +13,10 @@ export class ExceptionsLoggerFilter extends BaseExceptionFilter {
 
     response.status(status).json({
       statusCode: status,
-      timestamp: new Date().toISOString(),
       path: request.url,
       message: exception.message, // In ra thông báo lỗi
-      stack: exception.stack, // In ra stack trace
+      stack: exception.stack, // In ra stack trace,
+      error: exception.response,
     });
   }
 }
