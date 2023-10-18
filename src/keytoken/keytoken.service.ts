@@ -17,12 +17,14 @@ export class KeytokenService {
           userId,
         },
       });
+      console.log('userId is =====', userId);
       return keyToken;
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
   }
 
+  // save token and key to DB
   public async createKeyToken({
     privateKey,
     publicKey,
@@ -54,7 +56,7 @@ export class KeytokenService {
         userId,
         refreshToken,
       });
-      return tokens ? tokens.publicKey : null;
+      return tokens;
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
@@ -73,7 +75,6 @@ export class KeytokenService {
 
   public async deleteKeyToken({ id }: { id: string }) {
     try {
-      console.log('id', id);
       return await this.keyTokenEntity.delete({
         id,
       });

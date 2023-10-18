@@ -25,3 +25,21 @@ export const pick = (object = {}, keys: string[]): any => {
     return obj;
   }, {});
 };
+
+export const removeUndefined = (obj: any) => {
+  // { product_category: 'undefined', product_shop: 'undefined' }
+  // return {}
+  const tmp = Object.keys(obj).reduce((acc, key) => {
+    if (
+      obj[key] !== 'undefined' &&
+      obj[key] !== undefined &&
+      obj[key] !== null &&
+      obj[key] !== 'null' &&
+      obj[key] !== ''
+    ) {
+      acc[key] = obj[key];
+    }
+    return acc;
+  }, {});
+  return tmp;
+};

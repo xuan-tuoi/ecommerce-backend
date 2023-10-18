@@ -17,12 +17,15 @@ export class CloudinaryService {
   }
 
   async uploadImage(
-    idShop: string,
+    // idShop: string,
     file: Express.Multer.File,
   ): Promise<CloudinaryResponse> {
     try {
       return new Promise<CloudinaryResponse>(async (resolve, reject) => {
-        const publicId = `ecommerce/${idShop}/${getImgName(file.originalname)}`;
+        // const publicId = `ecommerce/${idShop}/${getImgName(file.originalname)}`;
+        const now = new Date();
+
+        const publicId = `ecommerce/products/${now.getTime()}`;
         const uploadStream = await cloudinary.uploader.upload_stream(
           { public_id: publicId }, //
           (error, result) => {
@@ -34,7 +37,6 @@ export class CloudinaryService {
         streamifier.createReadStream(file.buffer).pipe(uploadStream);
       });
     } catch (error) {
-      console.log('error', error);
       throw new Error(error);
     }
   }
@@ -42,21 +44,16 @@ export class CloudinaryService {
   async uploadImageFromBase64(
     folderName: string,
     base64ImageData: string,
-  ): Promise<any> {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: folderName },
-      (error, result) => {
-        if (error) {
-          console.error('Error uploading image:', error);
-        } else {
-          console.log('Image uploaded successfully:', result);
-        }
-      },
-    );
-
-    const bufferStream = streamifier.createReadStream(
-      Buffer.from(base64ImageData, 'base64'),
-    );
-    bufferStream.pipe(uploadStream);
+  ): Promise<CloudinaryResponse> {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload(
+        base64ImageData,
+        { folder: folderName },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        },
+      );
+    });
   }
 }

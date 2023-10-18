@@ -15,6 +15,12 @@ import { ProductsModule } from './products/products.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { VoucherModule } from './voucher/voucher.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { CartModule } from './cart/cart.module';
+import { HistoryVoucherModule } from './history-voucher/history-voucher.module';
+import { OrdersModule } from './orders/orders.module';
+import { OrderProductModule } from './order_product/order_product.module';
 
 dotenv.config();
 
@@ -28,10 +34,12 @@ const defaultOptions = {
   namingStrategy: new SnakeNamingStrategy(),
 };
 
-console.log('defaultOptions', defaultOptions);
-
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      exclude: ['/api/(.*)'],
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env', '.env.local'],
@@ -58,6 +66,10 @@ console.log('defaultOptions', defaultOptions);
     CloudinaryModule,
     ReviewsModule,
     VoucherModule,
+    CartModule,
+    HistoryVoucherModule,
+    OrdersModule,
+    OrderProductModule,
   ],
   controllers: [AppController],
   providers: [

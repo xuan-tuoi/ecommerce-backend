@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
@@ -23,7 +18,7 @@ export class UsersService {
       });
       return user;
     } catch (error) {
-      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(error);
     }
   }
 
@@ -33,7 +28,7 @@ export class UsersService {
         where: { id },
       })
       .catch((err) => {
-        throw new HttpException(err, HttpStatus.BAD_REQUEST);
+        throw new BadRequestException(err);
       });
     if (!user) {
       throw new BadRequestException('User not found');
@@ -46,8 +41,22 @@ export class UsersService {
       userDto.username = userDto.email;
     }
     const user = await this.usersRepository.save(userDto).catch((err) => {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(err);
     });
     return user;
+  }
+
+  async updateUser(id: string, userDto) {
+    const user = await this.getUserById(id);
+    const updatedUser = await this.usersRepository
+      .save({ ...user, ...userDto })
+      .catch((err) => {
+        throw new BadRequestException(err);
+      });
+    return updatedUser;
+  }
+
+  async save(user: User): Promise<User> {
+    return await this.usersRepository.save(user);
   }
 }
