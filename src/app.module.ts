@@ -50,7 +50,7 @@ const defaultOptions = {
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      ssl: true, // ssl is stand for Secure Sockets Layer - a global standard security technology that enables encrypted communication between a web browser and a web server
+      // ssl: true, // ssl is stand for Secure Sockets Layer - a global standard security technology that enables encrypted communication between a web browser and a web server
       // host: 'localhost',
       // port: 5432,
       // username: 'postgres',

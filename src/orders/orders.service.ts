@@ -168,8 +168,8 @@ export class OrdersService {
     queryBuilder
       .leftJoinAndSelect('orders.user', 'user')
       .where('user.id = :userId', { userId: user.id })
-      .skip(skip)
-      .take(pageOptionsDto.limit)
+      // .skip(skip)
+      // .take(pageOptionsDto.limit)
       .orderBy(`orders.${pageOptionsDto.sort}`, pageOptionsDto.order);
 
     // lấy ra tổng số lượng đơn hàng của user
@@ -210,7 +210,6 @@ export class OrdersService {
   public async updateOrder(body: UpdateOrderDto) {
     try {
       const orderId = body.order_id;
-      console.log('orderId', orderId);
       const order = await this.orderRepository
         .findOne({
           where: { id: orderId },
@@ -224,8 +223,6 @@ export class OrdersService {
       if (!order) {
         throw new Error('Order not found');
       }
-
-      console.log('order', order);
 
       if (body.order_status) {
         order.order_status = body.order_status;

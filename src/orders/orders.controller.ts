@@ -34,7 +34,6 @@ export class OrdersController {
 
   @Patch('/update')
   async updateOrder(@Body() body: UpdateOrderDto) {
-    // console.log('orderId', orderId);
     return this.ordersService.updateOrder(body);
   }
 }

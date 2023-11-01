@@ -81,10 +81,23 @@ export class ProductsController {
     );
   }
 
+  /**
+   * @returns top 4 sản phẩm bán chạy nhất
+   */
   @Get('/best-seller')
   async getBestSellerProducts() {
     return await this.productsService.getBestSellerProducts();
   }
+
+  /**
+   * @param shopId string
+   * @returns  top 10 sản phẩm bán chạy nhất của shop
+   */
+  @Get('/best-seller/:shopId')
+  async getBestSellerProductsByShopId(@Param('shopId') shopId: string) {
+    return await this.productsService.getBestSellerProductsByShopId(shopId);
+  }
+
   /**
    *  Lấy tất cả sản phẩm đã published của 1 shop theo shopId
    * [USER]
@@ -107,47 +120,10 @@ export class ProductsController {
     return await this.productsService.getProductsByShopId(shopId, options);
   }
 
-  @Post('/clone-data')
-  @UseInterceptors(
-    FileInterceptor('file_asset', {
-      storage: diskStorage({
-        destination: './files',
-      }),
-    }),
-  )
-  async cloneData() {
-    const csvFile = readFileSync('files/cosmetics.csv');
-    const csvString = csvFile.toString();
-
-    // const parsedCsv = csvString.split('\n').map((row) => row.split(','));
-    // const header = parsedCsv[0];
-    // const data = parsedCsv.slice(1);
-    // const products = data.slice(0, 2).map((row) => {
-    //   const product = {};
-    //   row.forEach((item, index) => {
-    //     product[header[index]] = item;
-    //   });
-    //   return product;
-    // });
-    const parsedCsv = await Papa.parse(csvString, {
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: (header) => header.toLowerCase().replace('#', '').trim(),
-      complete: (results) => results.data,
-    });
-    return await this.productsService.cloneData(parsedCsv.data);
-  }
-
   @Post('/craw-data/website')
   async crawData() {
     // return 'hello';
     return await this.productsService.crawData();
-  }
-
-  @Post('/clone-data-or')
-  async cloneDataOr() {
-    const data = MOCKED_RESPONSE_TS;
-    return await this.productsService.cloneDataV2(data);
   }
 
   /**

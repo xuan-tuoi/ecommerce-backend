@@ -137,6 +137,7 @@ export class ProductsService {
   ) {
     const listOrder: any = await this.orderProductService.getHistoryOrder(
       userId,
+      pageOptionsDto,
     );
     if (listOrder.length > 0) {
       const listProduct = listOrder.map((order) => order.product);
@@ -251,7 +252,6 @@ export class ProductsService {
         // - Sắp xếp theo top các sản phẩm bán chạy nhất
         // - Sử dụng machine learning phân loại đối tượng người dùng, và gợi ý sản phẩm phù hợp với đối tượng đó
         const stragegy = ['history', 'best-seller', 'machine-learning'];
-        const random = Math.floor(Math.random() * stragegy.length);
         const strategy = stragegy[0];
         if (strategy === 'history') {
           listProduct = await this.getProductByHistoryOrder(
@@ -367,6 +367,8 @@ export class ProductsService {
             `products.product_name ilike '%${listQuery.search_key}%'`,
           );
         }
+        const query = queryBuilder.getQuery();
+        console.log('query', query);
 
         const countItem: number = await queryBuilder.getCount();
         const listProduct = await queryBuilder.getMany();
@@ -404,6 +406,35 @@ export class ProductsService {
             .orderBy(`products.${pageOptionsDto.sort}`, pageOptionsDto.order)
             .skip(skip)
             .take(pageOptionsDto.limit);
+          if (listQuery.product_category) {
+            const category =
+              listQuery.product_category.charAt(0).toUpperCase() +
+              listQuery.product_category.slice(1);
+            // category : Facial, Body, Hair
+            // những sản phẩm có category là cleaner, toner, moisturizer, serum, mask, sunscreen là Facial
+            // những sản phẩm có category là shampoo, conditioner, hair mask, hair oil là Hair
+            // những sản phẩm có category là body wash, body lotion, body oil, body scrub, hand cream, foot cream là Body
+            const type = classifyCategoryByType.filter((item) => {
+              return item.category.includes(category);
+            });
+            queryBuilderLastPage.andWhere(
+              `products.product_category in (:...type)`,
+              {
+                type: type[0].type,
+              },
+            );
+          }
+          if (listQuery.product_shop) {
+            queryBuilderLastPage.andWhere(
+              `user.username ilike '%${listQuery.product_shop}%'`,
+            );
+          }
+
+          if (listQuery.search_key) {
+            queryBuilderLastPage.andWhere(
+              `products.product_name ilike '%${listQuery.search_key}%'`,
+            );
+          }
           const listProductsLastPage = await queryBuilderLastPage.getMany();
           result.push({
             page: toalPage,
@@ -422,40 +453,33 @@ export class ProductsService {
   }
 
   public async getBestSellerProducts() {
-    let top4SellerProduct =
-      await this.orderProductService.getTop4BestSellerProduct();
-    // nếu là mảng rỗng thì sẽ lấy 4 sản phẩm bất kì trong DB
-    if (top4SellerProduct.length === 0) {
-      const queryBuilder =
-        this.productRepository.createQueryBuilder('products');
-      queryBuilder
-        .leftJoinAndSelect('products.user', 'user')
-        .where('products.isDeleted = false')
-        .andWhere('products.isPublished = true')
-        .orderBy(`products.createdAt`, 'DESC')
-        .take(4);
-      const listProducts = await queryBuilder.getMany();
-      return listProducts;
-    } else {
-      // nếu không đủ 4 item thì sẽ lấy thêm item từ DB
-      if (top4SellerProduct.length < 4) {
-        const queryBuilder2 =
-          this.productRepository.createQueryBuilder('products');
-        queryBuilder2
-          .leftJoinAndSelect('products.user', 'user')
-          .where('products.isDeleted = false')
-          .andWhere('products.isPublished = true')
-          .orderBy(`products.createdAt`, 'DESC')
-          .take(4 - top4SellerProduct.length);
-        const listProducts2 = await queryBuilder2.getMany();
-        top4SellerProduct = top4SellerProduct.concat(listProducts2);
+    try {
+      const listProduct = await this.productRepository.query(
+        `select * from (select product_id , sum(quantity) as quantity
+        from order_product
+        group by product_id 
+        order by sum(quantity) desc) as A , products
+        where A.product_id = products.id
+        and products.is_published = true
+        and products.is_deleted = false
+        order by A.quantity desc
+        limit 60
+        `,
+      );
+      console.log('listProduct', listProduct.length);
+      if (listProduct.length === 0) {
+        console.log('listProduct.length === 0');
+        const resutlt = await this.productRepository.query(
+          `select * 
+            from products
+            order by created_at desc
+            limit 60`,
+        );
+        return resutlt;
       }
-      const promise = top4SellerProduct.map(async (item) => {
-        const product = await this.getProductById(item.product_id);
-        return product;
-      });
-      const listProducts = await Promise.all(promise);
-      return listProducts;
+      return listProduct;
+    } catch (error) {
+      throw new BadRequestException(error);
     }
   }
 
@@ -466,110 +490,6 @@ export class ProductsService {
     });
     return {
       message: 'Delete product successfully',
-    };
-  }
-
-  // functions for clone and craw data from other website
-  public async cloneData(products: any) {
-    const listSize = [
-      '3.4 oz/100mL',
-      '1.7 oz/50 mL',
-      '1 oz/30 mL',
-      '0.3 oz/10 mL',
-      '0.25 oz/7.5 mL',
-      '0.17 oz/5 mL',
-      '0.1 oz/3 mL',
-      '0.05 oz/1.5 mL',
-    ];
-    const listUser = [
-      {
-        id: '85a26cd1-4f5f-4468-b0ce-41118681234b',
-        username: 'Bioderma',
-      },
-      {
-        id: '9a420be2-4df3-4595-a500-2211de5a9701',
-        username: 'The Ordinary',
-      },
-    ];
-    const promises = products.map(async (product) => {
-      const newProduct = {
-        product_name: product.name || 'Default product name',
-        product_listImages: ['/product/default.png'],
-        product_thumbnail: '/product/default.png',
-        product_description: product.ingredients,
-        product_attribute: {
-          size: listSize[Math.floor(Math.random() * listSize.length)],
-          dry: product.dry,
-          oily: product.oily,
-          normal: product.normal,
-          sensitive: product.sensitive,
-        },
-        product_price: product.price,
-        product_quantity: Math.floor(Math.random() * 1000) + 1,
-        product_category:
-          product.label === 'Sun protect' ? 'Body' : product.label,
-        product_ratingsAverage:
-          product.rank < 4.6 ? +product.rank + 0.4 : product.rank,
-        isDraft: false,
-        isPublished: true,
-        user: listUser[Math.floor(Math.random() * listUser.length)],
-      };
-      const newProductEntity = await this.productRepository.create(newProduct);
-      return await this.productRepository.save(newProductEntity);
-    });
-
-    const res = await Promise.all(promises);
-    return {
-      mess: 'Clone data successfully',
-    };
-  }
-
-  public async cloneDataV2(products: any) {
-    const listSize = [
-      '3.4 oz/100mL',
-      '1.7 oz/50 mL',
-      '1 oz/30 mL',
-      '0.3 oz/10 mL',
-      '0.25 oz/7.5 mL',
-      '0.17 oz/5 mL',
-      '0.1 oz/3 mL',
-      '0.05 oz/1.5 mL',
-    ];
-
-    const promises = products.slice(0, 130).map(async (product) => {
-      console.log(
-        '🚀 ~ file: product.service.ts ~ line 256 ~ ProductService ~ product',
-        product,
-      );
-      const newProduct = {
-        product_name: product.product_name || 'Default product name',
-        product_listImages: ['/product/default.png'],
-        product_thumbnail: product.product_url,
-        product_description: product.clean_ingreds[0],
-        product_attribute: {
-          size: listSize[Math.floor(Math.random() * listSize.length)],
-          dry: product.dry || 1,
-          oily: product.oily || 1,
-          normal: product.normal || 1,
-          sensitive: product.sensitive || 1,
-        },
-        product_price: product.price.substring(1),
-        product_quantity: Math.floor(Math.random() * 1000) + 1,
-        product_category: product.product_type,
-        product_ratingsAverage: Math.floor(Math.random() * (5 - 4.5 + 1) + 4.5),
-        isDraft: false,
-        isPublished: true,
-        user: {
-          id: 'db7c6b7e-8e2f-42ee-a63b-332656d82ca2',
-          username: `L'Oréal`,
-        },
-      };
-      const newProductEntity = await this.productRepository.create(newProduct);
-      return await this.productRepository.save(newProductEntity);
-    });
-    await Promise.all(promises);
-    return {
-      message: 'Clone data successfully',
     };
   }
 
@@ -808,5 +728,37 @@ export class ProductsService {
       .take(5);
     const listProduct = await queryBuilder.getMany();
     return listProduct;
+  }
+
+  public async getBestSellerProductsByShopId(shopId: string) {
+    try {
+      const listProduct = await this.productRepository.query(
+        `select * from (select product_id , sum(quantity) as quantity
+        from order_product
+        group by product_id 
+        order by sum(quantity) desc) as A , products
+        where A.product_id = products.id
+        and products.user_id='${shopId}'
+        and products.is_published = true
+        and products.is_deleted = false
+        order by A.quantity desc
+        limit 10
+        `,
+      );
+      if (listProduct.length === 0) {
+        console.log('listProduct.length === 0');
+        const resutlt = await this.productRepository.query(
+          `select * 
+            from products
+            where products.user_id='${shopId}'
+            order by created_at desc
+            limit 10`,
+        );
+        return resutlt;
+      }
+      return listProduct;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
   }
 }

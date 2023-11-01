@@ -53,8 +53,6 @@ export class OrderProductService {
       .groupBy('order_product.product_id')
       .orderBy('SUM(order_product.quantity)', 'DESC')
       .take(4);
-    const query = queryBuilder.getQuery();
-    console.log('query', query);
     const top4SellerProduct = await queryBuilder.getRawMany();
     return top4SellerProduct;
   }
@@ -72,13 +70,17 @@ export class OrderProductService {
     return listOrderProduct;
   }
 
-  public async getHistoryOrder(userId: string) {
+  public async getHistoryOrder(userId: string, pageOptionsDto: PageOptionsDto) {
+    const skip = (pageOptionsDto.page - 1) * pageOptionsDto.limit;
     const queryBuilder =
       this.orderProductRepository.createQueryBuilder('order_product');
     const listOrderProduct = await queryBuilder
       .leftJoinAndSelect('order_product.product', 'products')
       .leftJoin('order_product.order', 'orders')
       .andWhere(`orders.user_id = '${userId}'`)
+      .andWhere('order_product.isDeleted = :isDeleted', { isDeleted: false })
+      .orderBy(`products.${pageOptionsDto.sort}`, pageOptionsDto.order)
+      .skip(skip)
       .getMany();
     // TH user mới sẽ chưa có order nào => listOrderProduct = []
     return listOrderProduct;

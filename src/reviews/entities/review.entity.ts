@@ -11,6 +11,15 @@ export class ReviewEntity extends BaseEntity {
   @Column({ type: 'float', nullable: true })
   review_ratings: number;
 
+  @Column({ type: 'varchar', nullable: true, default: null })
+  parentCommentId: string;
+
+  @Column({ type: 'int', nullable: true })
+  comment_left: number;
+
+  @Column({ type: 'int', nullable: true })
+  comment_right: number;
+
   @ManyToOne(() => UserEntity, (user) => user.reviews)
   user: UserEntity;
 
