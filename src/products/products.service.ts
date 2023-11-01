@@ -466,9 +466,7 @@ export class ProductsService {
         limit 60
         `,
       );
-      console.log('listProduct', listProduct.length);
       if (listProduct.length === 0) {
-        console.log('listProduct.length === 0');
         const resutlt = await this.productRepository.query(
           `select * 
             from products
