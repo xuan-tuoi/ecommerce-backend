@@ -1,7 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class UpdateOrderDto {
-  @IsString()
   order_shipping: any;
 
   order_status: string;

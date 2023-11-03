@@ -8,7 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 
 import * as bcrypt from 'bcrypt';
-import crypto from 'crypto';
 import * as dotenv from 'dotenv';
 import { RoleOfuser, saltOrRounds } from 'src/common/constant';
 import { KeytokenService } from 'src/keytoken/keytoken.service';

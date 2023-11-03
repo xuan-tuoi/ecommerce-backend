@@ -4,17 +4,34 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { PageOptionsDto } from 'src/common/dto/pageOptions.dto';
 import { pick } from 'src/common/utils/helpers';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { DeleteReviewDto } from './dto/delete-review.dto';
 import { ReviewsService } from './reviews.service';
 
-@Controller('reviews')
+@Controller('v1/reviews')
 export class ReviewsController {
   constructor(private readonly reviewService: ReviewsService) {}
+
+  @Get()
+  async getReviewsByParentId(
+    @Query() pageOptionsDto: PageOptionsDto,
+    @Query('productId') productId: string,
+    @Query('parentId') parentId: string,
+  ) {
+    const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
+    return await this.reviewService.getReviewsByParentId(
+      productId,
+      parentId,
+      options,
+    );
+  }
 
   /**
    * get all reviews product of a shop
@@ -66,8 +83,22 @@ export class ReviewsController {
     return await this.reviewService.createReview(createReviewDto);
   }
 
+  @Patch('/:reviewId')
+  async updateReview(
+    @Param('reviewId') reviewId: string,
+    @Body('content') content: string,
+  ) {
+    console.log('reviewId', reviewId, 'content', content);
+    return await this.reviewService.updateReview(reviewId, content);
+  }
+
   @Delete('/:reviewId')
   async deleteReview(@Param('reviewId') reviewId: string) {
     return await this.reviewService.deleteReview(reviewId);
+  }
+
+  @Delete()
+  async deleteReviewAndChild(@Body() deleteReviewDto: DeleteReviewDto) {
+    return await this.reviewService.deleteReviewAndChild(deleteReviewDto);
   }
 }

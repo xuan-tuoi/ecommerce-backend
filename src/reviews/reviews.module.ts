@@ -40,13 +40,13 @@ export class ReviewsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(AuthenticationMiddleware).forRoutes(
       // Define routes that should use the middleware
-      { path: '/api/reviews/shop/:shopId', method: RequestMethod.GET },
+      { path: '/v1/reviews/shop/:shopId', method: RequestMethod.GET },
       {
-        path: '/api/reviews',
+        path: '/v1/reviews',
         method: RequestMethod.POST,
       },
       {
-        path: '/api/reviews/:reviewId',
+        path: '/v1/reviews/:reviewId',
         method: RequestMethod.DELETE,
       },
       // Add more routes here if needed
