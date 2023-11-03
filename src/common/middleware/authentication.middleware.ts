@@ -18,11 +18,13 @@ export class AuthenticationMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
+    console.log('----cALLING FOR CHECK MIDDLEWARE----');
     // b1: check userId in header
     const userId = req.headers[HEADER.CLIENT_ID]?.toString();
     if (!userId) {
-      throw new BadRequestException('Missing client id');
+      throw new BadRequestException('Please login or register to continue');
     }
+    console.log('middlewar req.headers---->', req.headers);
     // b2. get access token from tokenService ?
     const keyStore = await this.keyTokenService.getKeyToken({ userId });
     if (!keyStore) {
@@ -39,7 +41,7 @@ export class AuthenticationMiddleware implements NestMiddleware {
         console.log('decoder', decoder);
 
         if (userId !== decoder.id) {
-          throw new BadRequestException('Invalid user id  ');
+          throw new BadRequestException('Invalid user id');
         }
         console.log('---------key store after decode is::::::::', keyStore);
         req['keyStore'] = keyStore;
@@ -61,7 +63,9 @@ export class AuthenticationMiddleware implements NestMiddleware {
       });
 
       if (userId !== decoder.id) {
-        throw new BadRequestException('Invalid access token');
+        throw new BadRequestException(
+          'Invalid access token, please re-login or register to continue',
+        );
       }
       req['keyStore'] = keyStore;
       req['user'] = decoder;

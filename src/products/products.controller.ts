@@ -82,7 +82,7 @@ export class ProductsController {
   }
 
   /**
-   * @returns top 4 sản phẩm bán chạy nhất
+   * @returns top 60 sản phẩm bán chạy nhất
    */
   @Get('/best-seller')
   async getBestSellerProducts() {
