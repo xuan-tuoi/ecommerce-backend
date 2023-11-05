@@ -10,7 +10,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { AuthenticationMiddleware } from 'src/common/middleware/authentication.middleware';
 import { KeytokenModule } from 'src/keytoken/keytoken.module';
-import { OrdersModule } from 'src/orders/orders.module';
 import { OrderProductModule } from 'src/order_product/order_product.module';
 import { UsersModule } from 'src/users/users.module';
 import { ProductEntity } from './entities/product.entity';

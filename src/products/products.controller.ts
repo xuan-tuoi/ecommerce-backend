@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -23,6 +24,7 @@ import { SearchProductDto } from './dto/search-product.dto';
 import { ProductsService } from './products.service';
 import * as MOCKED_RESPONSE_TS from '../../public/files/skincare_products_clean.json';
 import { SimilarProductDto } from './dto/similar-product';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @Controller('v1/products')
 export class ProductsController {
@@ -155,6 +157,11 @@ export class ProductsController {
     } catch (error) {
       return new BadRequestException(error.message);
     }
+  }
+
+  @Patch('/update')
+  async updateInforProduct(@Body() body: UpdateProductDto) {
+    return await this.productsService.updateInforProduct(body);
   }
 
   /**

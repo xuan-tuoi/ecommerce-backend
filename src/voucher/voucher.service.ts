@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { ApplyVoucherDto } from './dto/apply-voucher.dto';
 import { CollectVoucherDto } from './dto/collect-voucher.dto';
 import { CreateVoucherDto } from './dto/create.dto';
+import { UpdateVoucherDto } from './dto/update-voucher.dto';
 import { VoucherEntity } from './entities/voucher.entity';
 
 @Injectable()
@@ -103,7 +104,6 @@ export class VoucherService {
         };
       }
 
-      console.log('voucherFound', voucherFound);
       // update number of voucher uses incase user not collected this voucher
       voucher.voucher_uses_count += 1;
       voucher.voucher_max_use -= 1;
@@ -270,6 +270,64 @@ export class VoucherService {
       return {
         freeShipMaxValueVoucher,
         storewideMaxValueVoucher,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async deleteVoucher(id: string) {
+    try {
+      // found voucher
+      const voucher = await this.vouchersRepository.find({
+        where: {
+          id: id,
+        },
+      });
+
+      if (!voucher) {
+        throw new BadRequestException('Voucher not found');
+      }
+
+      // xóa voucher trong bảng voucher_user
+      await this.vouchersRepository.query(`
+        DELETE FROM voucher_user
+        WHERE vouchers_id = '${id}'
+      `);
+
+      // xóa voucher trong bảng history-voucher
+      await this.vouchersRepository.query(`
+        DELETE FROM "history-voucher"
+        WHERE voucher_id = '${id}'
+      `);
+
+      // xóa voucher trong bảng voucher
+      await this.vouchersRepository.delete(id);
+
+      return {
+        message: 'Delete voucher successfully',
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async updateVoucher(body: UpdateVoucherDto) {
+    try {
+      const voucher = await this.vouchersRepository.findOne({
+        where: {
+          id: body.id,
+        },
+      });
+      if (!voucher) {
+        throw new BadRequestException('Voucher not found');
+      }
+      await this.vouchersRepository.save({
+        ...voucher,
+        ...body,
+      });
+      return {
+        message: 'Update voucher successfully',
       };
     } catch (error) {
       throw new BadRequestException(error.message);

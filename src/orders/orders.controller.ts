@@ -32,6 +32,11 @@ export class OrdersController {
     return this.ordersService.createOrder(body);
   }
 
+  @Post('/crawl-data-order')
+  async crawlDataOrder() {
+    return this.ordersService.crawlDataOrder();
+  }
+
   @Patch('/update')
   async updateOrder(@Body() body: UpdateOrderDto) {
     return this.ordersService.updateOrder(body);

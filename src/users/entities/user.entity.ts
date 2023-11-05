@@ -27,7 +27,7 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   age: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: false, unique: true })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   password: string;
 
   @Index('email', { unique: true })

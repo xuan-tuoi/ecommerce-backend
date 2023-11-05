@@ -224,16 +224,97 @@ export class OrdersService {
         throw new Error('Order not found');
       }
 
-      if (body.order_status) {
-        order.order_status = body.order_status;
+      if (body.time_delivery) {
+        order.time_delivery = body.time_delivery;
       }
+
+      if (body.order_checkout) {
+        order.order_checkout = body.order_checkout;
+      }
+
       if (body.order_shipping) {
         order.order_shipping = body.order_shipping;
       }
+
+      if (body.order_payment) {
+        order.order_payment = body.order_payment;
+      }
+
+      if (body.order_status) {
+        order.order_status = body.order_status;
+      }
+
       await this.orderRepository.save(order);
       return order;
     } catch (error) {
       console.log('error', error);
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+  public async crawlDataOrder() {
+    try {
+      const listUser = await this.userService.getAllCustomer();
+      const listProduct = await this.productService.getAllProduct();
+      const promise = listUser.map(async (user) => {
+        console.log('user:::', user);
+        const productRandomId =
+          listProduct[Math.floor(Math.random() * listProduct.length)];
+        const product = await this.productService.getProductById(
+          productRandomId.id,
+        );
+
+        const order_shipping = [
+          {
+            name: 'Giao hàng tiết kiệm',
+            city: 'Hồ Chí Minh',
+          },
+          {
+            city: 'Hà Nội',
+            phone: '1900 545 436',
+          },
+          {
+            city: 'Đà Nẵng',
+            phone: '1900 545 436',
+          },
+          {
+            city: 'Hải Phòng',
+            phone: '1900 545 436',
+          },
+        ];
+
+        const order_payment = {
+          paymentData: {
+            cardName: '',
+            cardNumber: '',
+          },
+          paymentMethod: 'money',
+        };
+
+        const quantity = Math.floor(Math.random() * 20);
+
+        const order_checkout = {
+          totalPrice: product.product_price * quantity,
+        };
+
+        const newOrder = await this.orderRepository.save({
+          order_shipping: order_shipping[Math.floor(Math.random() * 4)],
+          order_payment,
+          user,
+          order_status: ['pending', 'packaged', 'shipping', 'cancelled'][
+            Math.floor(Math.random() * 4)
+          ],
+          order_checkout,
+        });
+
+        await this.orderProductService.createOrderProduct({
+          product,
+          quantity,
+          order: newOrder,
+        });
+        return newOrder;
+      });
+      return await Promise.all(promise);
+    } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
