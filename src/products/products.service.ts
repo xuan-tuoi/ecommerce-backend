@@ -20,6 +20,7 @@ import { UsersService } from 'src/users/users.service';
 import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { SimilarProductDto } from './dto/similar-product';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
 
 @Injectable()
@@ -50,6 +51,19 @@ export class ProductsService {
       throw new HttpException('Product not found', HttpStatus.BAD_REQUEST);
     }
     return product;
+  }
+
+  public async getAllProduct() {
+    try {
+      const products = await this.productRepository.find({
+        where: {
+          isDeleted: false,
+        },
+      });
+      return products;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   public async createProduct(
@@ -483,6 +497,19 @@ export class ProductsService {
 
   public async deleteProduct(productId: string) {
     const product = await this.getProductById(productId);
+
+    // xóa product trong bảng reviews
+    await this.productRepository.query(`
+      delete from reviews
+      where product_id = '${productId}'
+    `);
+
+    // xóa product trong bảng order_product
+    await this.productRepository.query(`
+      delete from order_product
+      where product_id = '${productId}'
+    `);
+
     await this.productRepository.delete({
       id: product.id,
     });
@@ -755,6 +782,29 @@ export class ProductsService {
         return resutlt;
       }
       return listProduct;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  public async updateInforProduct(body: UpdateProductDto) {
+    try {
+      // find product by id
+      const foundProduct = await this.productRepository.findOne({
+        where: {
+          id: body.product_id,
+        },
+      });
+      if (!foundProduct) {
+        throw new BadRequestException('Product not found');
+      }
+
+      // update product
+      const updatedProduct = await this.productRepository.save({
+        ...foundProduct,
+        ...body,
+      });
+      return updatedProduct;
     } catch (error) {
       throw new BadRequestException(error);
     }

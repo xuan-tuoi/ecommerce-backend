@@ -1,14 +1,24 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApplyVoucherDto } from './dto/apply-voucher.dto';
 import { CollectVoucherDto } from './dto/collect-voucher.dto';
 import { CreateVoucherDto } from './dto/create.dto';
+import { UpdateVoucherDto } from './dto/update-voucher.dto';
 import { VoucherService } from './voucher.service';
 
 @Controller('v1/vouchers')
 export class VoucherController {
   constructor(private readonly voucherService: VoucherService) {}
 
-  @Get('')
+  @Get()
   async getVouchersByShopId(
     @Query('shopId') shopId: string,
     @Query('userId') userId: string,
@@ -42,5 +52,15 @@ export class VoucherController {
   @Post('/apply-voucher')
   async applyVoucher(@Body() body: ApplyVoucherDto) {
     return this.voucherService.applyVoucher(body);
+  }
+
+  @Patch('/update')
+  async updateVoucher(@Body() body: UpdateVoucherDto) {
+    return this.voucherService.updateVoucher(body);
+  }
+
+  @Delete('/:id')
+  async deleteVoucher(@Param('id') id: string) {
+    return this.voucherService.deleteVoucher(id);
   }
 }

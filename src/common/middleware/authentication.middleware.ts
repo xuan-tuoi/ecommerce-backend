@@ -1,8 +1,6 @@
 import {
   Injectable,
   NestMiddleware,
-  HttpException,
-  HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
