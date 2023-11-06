@@ -13,7 +13,5 @@ export class SearchProductDto {
   @IsOptional()
   search_key: string;
 
-  @IsString()
-  @IsNotEmpty()
   user_id: string;
 }

@@ -253,7 +253,8 @@ export class ProductsService {
       if (
         listQuery.product_category ||
         listQuery.product_shop ||
-        listQuery.search_key
+        listQuery.search_key ||
+        userId === 'undefined'
       ) {
         isApplyMachineLearning = false;
       }
@@ -381,8 +382,6 @@ export class ProductsService {
             `products.product_name ilike '%${listQuery.search_key}%'`,
           );
         }
-        const query = queryBuilder.getQuery();
-        console.log('query', query);
 
         const countItem: number = await queryBuilder.getCount();
         const listProduct = await queryBuilder.getMany();
