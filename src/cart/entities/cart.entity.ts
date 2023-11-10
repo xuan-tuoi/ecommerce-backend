@@ -8,7 +8,7 @@ export class CartEntity extends BaseEntity {
     type: 'varchar',
     nullable: false,
     default: 'active',
-    enum: ['active', 'completed', 'failed', 'pending'],
+    enum: ['active', 'comple ted', 'failed', 'pending'],
   })
   cart_status: string;
 

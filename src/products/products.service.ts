@@ -808,4 +808,60 @@ export class ProductsService {
       throw new BadRequestException(error);
     }
   }
+
+  public async getAdminProduct(listQuery: any, pageOptionsDto: PageOptionsDto) {
+    try {
+      const queryBuilder =
+        this.productRepository.createQueryBuilder('products');
+      const skip = (pageOptionsDto.page - 1) * pageOptionsDto.limit;
+      queryBuilder
+        .where('products.isDeleted = false')
+        .andWhere('products.isPublished = true')
+        .orderBy(`products.${pageOptionsDto.sort}`, pageOptionsDto.order)
+        .skip(skip)
+        .take(pageOptionsDto.limit); // lấy data của 6 page
+
+      if (listQuery.product_category) {
+        const category =
+          listQuery.product_category.charAt(0).toUpperCase() +
+          listQuery.product_category.slice(1);
+        // category : Facial, Body, Hair
+        // những sản phẩm có category là cleaner, toner, moisturizer, serum, mask, sunscreen là Facial
+        // những sản phẩm có category là shampoo, conditioner, hair mask, hair oil là Hair
+        // những sản phẩm có category là body wash, body lotion, body oil, body scrub, hand cream, foot cream là Body
+        const type = classifyCategoryByType.filter((item) => {
+          return item.category.includes(category);
+        });
+        queryBuilder.andWhere(`products.product_category in (:...type)`, {
+          type: type[0].type,
+        });
+      }
+      if (listQuery.product_shop) {
+        queryBuilder.andWhere(
+          `user.username ilike '%${listQuery.product_shop}%'`,
+        );
+      }
+
+      if (listQuery.search_key) {
+        queryBuilder.andWhere(
+          `products.product_name ilike '%${listQuery.search_key}%'`,
+        );
+      }
+
+      const countItem: number = await queryBuilder.getCount();
+      const listProduct = await queryBuilder.getMany();
+
+      const pageMetaDto: PageMetaDto = new PageMetaDto({
+        pageOptionsDto: pageOptionsDto,
+        itemCount: countItem,
+      });
+
+      return {
+        pageMetaDto,
+        listProduct,
+      };
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
 }

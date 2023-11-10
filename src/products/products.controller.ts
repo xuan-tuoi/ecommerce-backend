@@ -19,10 +19,8 @@ import { diskStorage } from 'multer';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PageOptionsDto } from 'src/common/dto/pageOptions.dto';
 import { pick, removeUndefined } from 'src/common/utils/helpers';
-import { CreateProductDto } from './dto/create-product.dto';
 import { SearchProductDto } from './dto/search-product.dto';
 import { ProductsService } from './products.service';
-import * as MOCKED_RESPONSE_TS from '../../public/files/skincare_products_clean.json';
 import { SimilarProductDto } from './dto/similar-product';
 import { UpdateProductDto } from './dto/update-product.dto';
 
@@ -53,6 +51,25 @@ export class ProductsController {
   @Get('/similar-product')
   async getSimilarProducts(@Query() queryOptions: SimilarProductDto) {
     return await this.productsService.getSimilarProducts(queryOptions);
+  }
+
+  @Get('/admin-product')
+  async getAdminProduct(
+    @Query() queryOptions: SearchProductDto,
+    @Query() pageOptionsDto: PageOptionsDto,
+  ) {
+    const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
+    options.limit = options.limit > 100 ? 100 : options.limit;
+    const listQuery = pick(queryOptions, [
+      'product_category',
+      'product_shop',
+      'search_key',
+    ]);
+
+    return await this.productsService.getAdminProduct(
+      removeUndefined(listQuery),
+      options,
+    );
   }
 
   /**
