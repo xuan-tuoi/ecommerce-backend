@@ -21,6 +21,8 @@ import { CartModule } from './cart/cart.module';
 import { HistoryVoucherModule } from './history-voucher/history-voucher.module';
 import { OrdersModule } from './orders/orders.module';
 import { OrderProductModule } from './order_product/order_product.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TrainingModelModule } from './training_model/training_model.module';
 
 dotenv.config();
 
@@ -50,7 +52,7 @@ const defaultOptions = {
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      ssl: true, // ssl is stand for Secure Sockets Layer - a global standard security technology that enables encrypted communication between a web browser and a web server
+      // ssl: true, // ssl is stand for Secure Sockets Layer - a global standard security technology that enables encrypted communication between a web browser and a web server
       // host: 'localhost',
       // port: 5432,
       // username: 'postgres',
@@ -60,6 +62,7 @@ const defaultOptions = {
       ...defaultOptions,
       autoLoadEntities: true,
     }),
+    ScheduleModule.forRoot(),
     UsersModule,
     KeytokenModule,
     AuthModule,
@@ -71,6 +74,7 @@ const defaultOptions = {
     HistoryVoucherModule,
     OrdersModule,
     OrderProductModule,
+    TrainingModelModule,
   ],
   controllers: [AppController],
   providers: [
