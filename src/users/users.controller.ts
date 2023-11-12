@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { Get, Param } from '@nestjs/common/decorators';
+import { Get, Param, Query } from '@nestjs/common/decorators';
 import { UserDto } from './dto/user.dto';
 import { UsersService } from './users.service';
 

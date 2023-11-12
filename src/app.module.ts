@@ -74,7 +74,7 @@ const defaultOptions = {
     HistoryVoucherModule,
     OrdersModule,
     OrderProductModule,
-    // TrainingModelModule,
+    TrainingModelModule,
   ],
   controllers: [AppController],
   providers: [

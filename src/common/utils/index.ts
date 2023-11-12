@@ -26,3 +26,8 @@ export const generateKeyByCrypto = async () => {
     encryptedData: encryptedText.toString('hex'),
   };
 };
+
+export const mappingCategory = (category: string) => {
+  const mapStr = category.split('_').join(' ');
+  return mapStr.charAt(0).toUpperCase() + mapStr.slice(1);
+};
