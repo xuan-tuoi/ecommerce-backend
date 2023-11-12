@@ -2,7 +2,6 @@ import {
   BadRequestException,
   HttpException,
   HttpStatus,
-  Inject,
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,7 +12,7 @@ import { classifyCategoryByType } from 'src/common/constant';
 import { PageDto } from 'src/common/dto/page.dto';
 import { PageMetaDto } from 'src/common/dto/pageMeta.dto';
 import { PageOptionsDto } from 'src/common/dto/pageOptions.dto';
-import { OrdersService } from 'src/orders/orders.service';
+import { mappingCategory } from 'src/common/utils';
 import { OrderProductService } from 'src/order_product/order_product.service';
 import { User } from 'src/users/user.interface';
 import { UsersService } from 'src/users/users.service';
@@ -859,6 +858,53 @@ export class ProductsService {
       return {
         pageMetaDto,
         listProduct,
+      };
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  public async getRecommendProducts(userId: string, n: number) {
+    try {
+      const user = await this.userService.getUserById(userId);
+      const url = process.env.FLASK_SERVER + '/recommend-for-user';
+      const result = await axios.get(url, {
+        params: {
+          userId: user.id,
+          n: n,
+        },
+      });
+      const response = result.data;
+      if (Object.keys(response.data).length === 0) {
+        return await this.getBestSellerProducts();
+      }
+
+      const productPerCategory = 60 / n;
+      const listProduct = [];
+      for (const key in response.data) {
+        const products = await this.productRepository.query(
+          `select * from products
+          where product_category = '${mappingCategory(response.data[key])}'
+          and is_published = true
+          and is_deleted = false
+          order by created_at desc
+          limit ${productPerCategory}
+        `,
+        );
+        listProduct.push(...products);
+      }
+      return listProduct;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  public async traningModel() {
+    try {
+      const url = process.env.FLASK_SERVER + '/trainUserKmeans';
+      await axios.get(url);
+      return {
+        message: 'Training model successfully',
       };
     } catch (error) {
       throw new BadRequestException(error);

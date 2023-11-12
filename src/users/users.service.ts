@@ -5,6 +5,11 @@ import { UserEntity } from './entities/user.entity';
 import { User } from './user.interface';
 import * as fs from 'fs';
 import * as createCsvWriter from 'csv-writer';
+import * as dotenv from 'dotenv';
+import axios from 'axios';
+import { ProductsService } from 'src/products/products.service';
+
+dotenv.config();
 
 @Injectable()
 export class UsersService {
@@ -119,7 +124,6 @@ export class UsersService {
 
   public async getHistoryOrdersOfUser() {
     try {
-      console.log('-----------------CALLING------------');
       const listCategory = await this.usersRepository.query(`
       SELECT DISTINCT product_category FROM products
       `);
@@ -162,7 +166,6 @@ export class UsersService {
           { id: 'gender', title: 'gender' },
           { id: 'user_id', title: 'user_id' },
           ...listCategory.map((category) => {
-            console.log('category --------> ', category);
             return {
               id: category.product_category.toLowerCase().replace(' ', '_'),
               title: category.product_category.toLowerCase().replace(' ', '_'),
@@ -175,5 +178,10 @@ export class UsersService {
     } catch (error) {
       throw new BadRequestException(error);
     }
+  }
+
+  public async traningModel() {
+    const flaskServerUrl = 'http://127.0.0.1:5000';
+    const url = `${flaskServerUrl}/train`;
   }
 }

@@ -5,12 +5,6 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('orders')
 export class OrderEntity extends BaseEntity {
-  @Column({
-    type: 'timestamp with time zone',
-    default: null,
-  })
-  time_delivery: Date;
-
   @Column({ type: 'jsonb', nullable: false }) // chứa totalPrice , totalDiscount, feeShip
   order_checkout: object;
 
@@ -30,6 +24,12 @@ export class OrderEntity extends BaseEntity {
   @ManyToOne(() => UserEntity, (user) => user.order)
   @JoinColumn() //
   user: UserEntity;
+
+  @Column({
+    type: 'timestamp with time zone',
+    default: null,
+  })
+  time_delivery: Date;
 
   @OneToMany(() => OrderProductEntity, (orderProduct) => orderProduct.order)
   orderProduct: OrderProductEntity[];

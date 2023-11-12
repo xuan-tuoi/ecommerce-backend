@@ -21,24 +21,12 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false })
   username: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  gender: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  age: string;
-
   @Column({ type: 'varchar', length: 255, nullable: false })
   password: string;
 
   @Index('email', { unique: true })
   @Column({ type: 'varchar', length: 255, nullable: false })
   email: string;
-
-  @Column({
-    type: 'jsonb',
-    nullable: true,
-  })
-  attribute: object;
 
   @Column({
     type: 'varchar',
@@ -60,6 +48,18 @@ export class UserEntity extends BaseEntity {
     enum: ['ADMIN', 'USER', 'SHOP'],
   })
   role: string;
+
+  @Column({
+    type: 'jsonb',
+    nullable: true,
+  })
+  attribute: object;
+
+  @Column({ type: 'varchar', nullable: true })
+  gender: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  age: string;
 
   @OneToMany(() => ProductEntity, (product) => product.user)
   products: ProductEntity[];

@@ -43,6 +43,20 @@ export class ProductsController {
   }
 
   /**
+   * recommend for user by userId and number of category incase new user return top best seller
+   * @param userId string
+   * @param n number
+   * @returns 60 products from n category
+   */
+  @Get('/recommend')
+  async getRecommendProducts(
+    @Query('userId') id: string,
+    @Query('n') n: number,
+  ) {
+    return await this.productsService.getRecommendProducts(id, n);
+  }
+
+  /**
    * Lấy danh sách sản phẩm similar với 1 sản phẩm theo product_id
    * [USER]
    * @param productId string
@@ -174,6 +188,12 @@ export class ProductsController {
     } catch (error) {
       return new BadRequestException(error.message);
     }
+  }
+
+  @Post('/traning-model')
+  async traningModel() {
+    console.log('traning model');
+    return await this.productsService.traningModel();
   }
 
   @Patch('/update')

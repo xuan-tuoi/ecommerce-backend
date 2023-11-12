@@ -53,6 +53,7 @@
     "joi": "^17.9.2",
     "jsdom": "^22.1.0",
     "mysql2": "^3.6.0",
+    "pandas-js": "^0.2.4",
     "papaparse": "^5.4.1",
     "pg": "^8.11.2",
     "reflect-metadata": "^0.1.13",
