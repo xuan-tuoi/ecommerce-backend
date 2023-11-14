@@ -910,4 +910,26 @@ export class ProductsService {
       throw new BadRequestException(error);
     }
   }
+
+  public async exportData() {
+    const query = `select products.id, product_price, product_quantity , product_category, product_ratings_average , product_name , user_id
+    from products `;
+    return await this.productRepository.query(query);
+    // const csvWriter = createCsvWriter.createObjectCsvWriter({
+    //   path: 'out.csv',
+    //   header: [
+    //     { id: 'id', title: 'id' },
+    //     { id: 'product_price', title: 'product_price' },
+    //     { id: 'product_quantity', title: 'product_quantity' },
+    //     { id: 'product_category', title: 'product_category' },
+    //     { id: 'product_ratings_average', title: 'product_ratings_average' },
+    //     { id: 'product_name', title: 'product_name' },
+    //     { id: 'user_id', title: 'user_id' },
+    //   ],
+    // });
+    // await csvWriter.writeRecords(listProduct);
+    // return {
+    //   mess: 'DONE',
+    // };
+  }
 }
