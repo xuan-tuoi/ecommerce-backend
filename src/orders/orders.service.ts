@@ -256,7 +256,6 @@ export class OrdersService {
       const listUser = await this.userService.getAllCustomer();
       const listProduct = await this.productService.getAllProduct();
       const promise = listUser.map(async (user) => {
-        console.log('user:::', user);
         const productRandomId =
           listProduct[Math.floor(Math.random() * listProduct.length)];
         const product = await this.productService.getProductById(
@@ -280,6 +279,18 @@ export class OrdersService {
             city: 'Hải Phòng',
             phone: '1900 545 436',
           },
+          {
+            city: 'Cần Thơ',
+            phone: '1900 545 436',
+          },
+          {
+            city: 'Bình Dương',
+            phone: '1900 545 436',
+          },
+          {
+            city: 'Đồng Nai',
+            phone: '1900 545 436',
+          },
         ];
 
         const order_payment = {
@@ -290,7 +301,7 @@ export class OrdersService {
           paymentMethod: 'money',
         };
 
-        const quantity = Math.floor(Math.random() * 20);
+        const quantity = Math.floor(Math.random() * 34);
 
         const order_checkout = {
           totalPrice: product.product_price * quantity,

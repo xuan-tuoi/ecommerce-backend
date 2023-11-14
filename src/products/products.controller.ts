@@ -42,6 +42,11 @@ export class ProductsController {
     return await this.productsService.getProductById(productId);
   }
 
+  @Get('/export-data')
+  async exportData() {
+    return await this.productsService.exportData();
+  }
+
   /**
    * recommend for user by userId and number of category incase new user return top best seller
    * @param userId string
