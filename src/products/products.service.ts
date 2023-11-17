@@ -736,21 +736,36 @@ export class ProductsService {
   }
 
   public async getSimilarProducts(queryOptions: SimilarProductDto) {
-    const { product_id, shop_id, product_category } = queryOptions;
-    const queryBuilder = this.productRepository.createQueryBuilder('products');
-    queryBuilder
-      .leftJoinAndSelect('products.user', 'user')
-      .where('products.id != :product_id', {
-        product_id,
-      })
-      .andWhere(`products.product_category = '${product_category}'`)
-      .andWhere(`user.id = '${shop_id}'`)
-      .andWhere('products.isPublished = true')
-      .andWhere('products.isDeleted = false')
-      .orderBy('products.product_ratingsAverage', 'DESC')
-      .take(5);
-    const listProduct = await queryBuilder.getMany();
-    return listProduct;
+    try {
+      const result = await axios
+        .get(
+          `${process.env.FLASK_SERVER}/recommend?productId=${queryOptions.product_id}&minN=${queryOptions.limit}`,
+        )
+        .then((res) => {
+          return res.data;
+        })
+        .catch((err) => {
+          console.log('err', err);
+        });
+      const listProductId = result.data;
+      const listPromises = listProductId.map(async (productId: string) => {
+        const product = await this.productRepository.findOne({
+          where: {
+            id: productId,
+          },
+        });
+        if (!product) {
+          return null;
+        }
+        return product;
+      });
+
+      const listProductData = await Promise.all(listPromises);
+      return listProductData;
+    } catch (error) {
+      throw new Error(error);
+    }
+    // http://127.0.0.1:5000/recommend?productId=4599d40a-4909-4378-84d8-1cc5a5a49911&minN=8
   }
 
   public async getBestSellerProductsByShopId(shopId: string) {
@@ -868,6 +883,7 @@ export class ProductsService {
     try {
       const user = await this.userService.getUserById(userId);
       const url = process.env.FLASK_SERVER + '/recommend-for-user';
+      // const url = 'http://127.0.0.1:5000' + '/recommend-for-user';
       const result = await axios.get(url, {
         params: {
           userId: user.id,
@@ -876,6 +892,7 @@ export class ProductsService {
       });
       const response = result.data;
       if (Object.keys(response.data).length === 0) {
+        console.log('THIS IS NEW USER');
         return await this.getBestSellerProducts();
       }
 
@@ -915,21 +932,5 @@ export class ProductsService {
     const query = `select products.id, product_price, product_quantity , product_category, product_ratings_average , product_name , user_id
     from products `;
     return await this.productRepository.query(query);
-    // const csvWriter = createCsvWriter.createObjectCsvWriter({
-    //   path: 'out.csv',
-    //   header: [
-    //     { id: 'id', title: 'id' },
-    //     { id: 'product_price', title: 'product_price' },
-    //     { id: 'product_quantity', title: 'product_quantity' },
-    //     { id: 'product_category', title: 'product_category' },
-    //     { id: 'product_ratings_average', title: 'product_ratings_average' },
-    //     { id: 'product_name', title: 'product_name' },
-    //     { id: 'user_id', title: 'user_id' },
-    //   ],
-    // });
-    // await csvWriter.writeRecords(listProduct);
-    // return {
-    //   mess: 'DONE',
-    // };
   }
 }

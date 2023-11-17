@@ -38,6 +38,8 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'https://beauty-ecommerce-nine.vercel.app',
+      'https://xuantuoi.pythonanywhere.com',
+      'xuantuoi.pythonanywhere.com',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders:

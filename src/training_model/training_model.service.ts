@@ -1,18 +1,26 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Injectable()
 export class TrainingModelService {
   private readonly logger = new Logger(TrainingModelService.name);
 
-  // @Cron('* * 1 * * *') // cron job chạy vào 1h sáng hàng ngày
+  @Cron('* * 1 * * *') // cron job chạy vào 1h sáng hàng ngày
   // @Cron('45 * * * * *') // cron job chạy vào 1' 45s' sáng hàng ngày
-  // async handleCron() {
-  //   const url = 'http://127.0.0.1:5000/trainUserKmeans';
-  //   console.log('TrainingModelService: handleCron: url: ', url);
-  //   // const data = await axios.get(url);
-  //   // this.logger.debug(data.data.mess);
-  //   // this.logger.debug(data.mess);
-  // }
+  async handleCron() {
+    try {
+      const url = process.env.FLASK_SERVER;
+      const response = await axios.get(`${url}/train-data`);
+      return {
+        status: response.status,
+        data: response.data,
+      };
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
 }
