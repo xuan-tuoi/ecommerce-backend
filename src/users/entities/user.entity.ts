@@ -61,6 +61,12 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   age: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  address: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  phone: string;
+
   @OneToMany(() => ProductEntity, (product) => product.user)
   products: ProductEntity[];
 

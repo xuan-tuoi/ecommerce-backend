@@ -61,14 +61,10 @@ export const classifyCategoryByType = [
   },
 ];
 
-const listImgProduct = [
-  'http://res.cloudinary.com/dyhgehoxx/image/upload/v1695057510/ecommerce/products/1695057463913.png',
-  'http://res.cloudinary.com/dyhgehoxx/image/upload/v1695057680/ecommerce/products/1695057633859.png',
-  'http://res.cloudinary.com/dyhgehoxx/image/upload/v1695057679/ecommerce/products/1695057633929.webp',
-  'http://res.cloudinary.com/dyhgehoxx/image/upload/v1695057679/ecommerce/products/1695057633931.jpg',
-  'http://res.cloudinary.com/dyhgehoxx/image/upload/v1695057679/ecommerce/products/1695057633933.webp',
-  'http://res.cloudinary.com/dyhgehoxx/image/upload/v1695057679/ecommerce/products/1695057633936.webp',
-  'http://res.cloudinary.com/dyhgehoxx/image/upload/v1695057680/ecommerce/products/1695057633938.png',
-  'http://res.cloudinary.com/dyhgehoxx/image/upload/v1695057680/ecommerce/products/1695057633941.png',
-  'http://res.cloudinary.com/dyhgehoxx/image/upload/v1695057680/ecommerce/products/1695057633942.png',
-];
+export const Order_status = {
+  PENDING: 'pending',
+  PACKAGED: 'packaged',
+  SHIPPING: 'shipping',
+  DELIVERED: 'delivered',
+  CANCELLED: 'cancelled',
+};

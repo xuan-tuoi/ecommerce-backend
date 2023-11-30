@@ -5,7 +5,9 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import moment from 'moment';
 import { CartService } from 'src/cart/cart.service';
+import { Order_status } from 'src/common/constant';
 import { PageMetaDto } from 'src/common/dto/pageMeta.dto';
 import { PageOptionsDto } from 'src/common/dto/pageOptions.dto';
 import { HistoryVoucherService } from 'src/history-voucher/history-voucher.service';
@@ -325,6 +327,218 @@ export class OrdersService {
         return newOrder;
       });
       return await Promise.all(promise);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  public async getInfoOrders({ userId, from, to }) {
+    try {
+      // get total Product in DB
+      const totalProduct = await this.productService.getTotalProductOfUser(
+        userId,
+      );
+
+      //"from":"2023-11-21",
+      // "to":"2023-11-28"
+      // -> lấy ra danh sách các ngày trong khoảng thời gian from - to
+      const listDate = [];
+      const currentDate = new Date(from);
+      const toDate = new Date(to);
+
+      while (currentDate <= toDate) {
+        listDate.push(currentDate.toISOString().split('T')[0]);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const listOrders = await this.orderRepository
+        .query(`select orders.* , order_product.quantity as  quantity from orders, order_product, products
+          where orders.id = order_product.order_id 
+          and order_product.product_id = products.id
+          and products.user_id='${userId}'
+          and orders.created_at between '${from}' and '${to}'
+          order by created_at desc
+        `);
+
+      const listOrderCancel = listOrders.filter(
+        (order) => order.order_status === Order_status.CANCELLED,
+      );
+
+      const tmp = listOrderCancel.reduce((acc, cur) => {
+        const date = cur.created_at.toISOString().substring(0, 10);
+        if (date in acc) {
+          acc[date] += cur.order_checkout.totalPrice;
+        } else {
+          acc[date] = cur.order_checkout.totalPrice;
+        }
+        return acc;
+      }, {});
+
+      const listOrderCancelByDay = listDate.reduce((acc, cur) => {
+        if (cur in tmp) {
+          acc[cur] = tmp[cur];
+        } else {
+          acc[cur] = 0;
+        }
+        return acc;
+      }, {});
+
+      const listOrderDelivered = listOrders.filter(
+        (order) => order.order_status === Order_status.DELIVERED,
+      );
+
+      const tmp02 = listOrderDelivered.reduce((acc, cur) => {
+        const date = cur.created_at.toISOString().substring(0, 10);
+        if (date in acc) {
+          acc[date] += cur.order_checkout.totalPrice;
+        } else {
+          acc[date] = cur.order_checkout.totalPrice;
+        }
+        return acc;
+      }, {});
+
+      const listOrderDeliveredByDay = listDate.reduce((acc, cur) => {
+        if (cur in tmp02) {
+          acc[cur] = tmp02[cur];
+        } else {
+          acc[cur] = 0;
+        }
+        return acc;
+      }, {});
+
+      // calculate total revenue by day
+      const totalRevenueByDay = listDate.reduce((acc, cur) => {
+        const sum = listOrderDeliveredByDay[cur] - listOrderCancelByDay[cur];
+        acc += sum;
+        return acc;
+      }, 0);
+
+      // total refund by day
+      const totalRefundByDay = listDate.reduce((acc, cur) => {
+        const sum = listOrderCancelByDay[cur];
+        acc += sum;
+        return acc;
+      }, 0);
+
+      const listRevenueByDay = listDate.reduce((acc, cur) => {
+        acc[cur] = listOrderDeliveredByDay[cur] - listOrderCancelByDay[cur];
+        return acc;
+      }, {});
+
+      // get latest order in Db
+      const listLatestOrder = await this.orderRepository.query(`
+        select orders.*, products.product_thumbnail , order_product.quantity  from orders, order_product, products
+        where orders.id = order_product.order_id
+        and order_product.product_id= products.id
+        and products.user_id='${userId}'
+        and orders.created_at between '${from}' and '${to}'
+        order by created_at desc
+        limit 10`);
+
+      return {
+        totalProduct,
+        listRevenueByDay,
+        totalRevenueByDay,
+        totalRefundByDay,
+        listLatestOrder,
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  public getListOrderByStatus({ listDate, status, listOrders }) {
+    const listOrderByStatus = listOrders.filter(
+      (order) => order.order_status === Order_status[status],
+    );
+
+    const tmp = listOrderByStatus.reduce((acc, cur) => {
+      const date = cur.created_at.toISOString().substring(0, 10);
+      if (date in acc) {
+        acc[date] += 1;
+      } else {
+        acc[date] = 1;
+      }
+      return acc;
+    }, {});
+
+    const listOrderByDay = listDate.reduce((acc, cur) => {
+      if (cur in tmp) {
+        acc[cur] = tmp[cur];
+      } else {
+        acc[cur] = 0;
+      }
+      return acc;
+    }, {});
+
+    return listOrderByDay;
+  }
+
+  public async getOrderAnalytics({ userId, from, to }) {
+    try {
+      //"from":"2023-11-21",
+      // "to":"2023-11-28"
+      // -> lấy ra danh sách các ngày trong khoảng thời gian from - to
+      const listDate = [];
+      const currentDate = new Date(from);
+      const toDate = new Date(to);
+
+      while (currentDate <= toDate) {
+        listDate.push(currentDate.toISOString().split('T')[0]);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const listOrders = await this.orderRepository
+        .query(`select orders.* , order_product.quantity as  quantity from orders, order_product, products
+          where orders.id = order_product.order_id 
+          and order_product.product_id = products.id
+          and products.user_id='${userId}'
+          and orders.created_at between '${from}' and '${to}'
+          order by created_at desc
+        `);
+
+      /** ================ GET LIST CANCEL================= */
+      const listOrderCancelByDay = this.getListOrderByStatus({
+        listDate,
+        status: 'CANCELLED',
+        listOrders,
+      });
+
+      /** ================ GET LIST Delivered================= */
+      const listOrderDeliveredByDay = this.getListOrderByStatus({
+        listDate,
+        status: 'DELIVERED',
+        listOrders,
+      });
+
+      /** ================ GET LIST PENDING================= */
+      const listOrderPendingByDay = this.getListOrderByStatus({
+        listDate,
+        status: 'PENDING',
+        listOrders,
+      });
+
+      /** ================ GET LIST PACKAGED================= */
+      const listOrderPackagedByDay = this.getListOrderByStatus({
+        listDate,
+        status: 'PACKAGED',
+        listOrders,
+      });
+
+      /** ================ GET LIST SHIPPING================= */
+      const listOrderShippingByDay = this.getListOrderByStatus({
+        listDate,
+        status: 'SHIPPING',
+        listOrders,
+      });
+
+      return {
+        listOrderCancelByDay,
+        listOrderDeliveredByDay,
+        listOrderPendingByDay,
+        listOrderPackagedByDay,
+        listOrderShippingByDay,
+      };
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }

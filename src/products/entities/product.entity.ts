@@ -2,7 +2,7 @@ import { BaseEntity } from 'src/common/entities/base.entity';
 import { OrderProductEntity } from 'src/order_product/entities/orderProduct.entity';
 import { ReviewEntity } from 'src/reviews/entities/review.entity';
 import { UserEntity } from 'src/users/entities/user.entity';
-import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('products')
 export class ProductEntity extends BaseEntity {

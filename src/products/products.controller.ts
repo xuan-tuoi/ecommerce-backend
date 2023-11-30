@@ -13,9 +13,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AnyFilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import * as Papa from 'papaparse';
-import { readFileSync } from 'fs';
-import { diskStorage } from 'multer';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PageOptionsDto } from 'src/common/dto/pageOptions.dto';
 import { pick, removeUndefined } from 'src/common/utils/helpers';

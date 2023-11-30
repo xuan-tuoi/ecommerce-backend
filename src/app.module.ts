@@ -1,6 +1,11 @@
 import * as dotenv from 'dotenv';
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SnakeNamingStrategy } from './common/stragegy/snake-naming.strategy';
@@ -21,8 +26,9 @@ import { CartModule } from './cart/cart.module';
 import { HistoryVoucherModule } from './history-voucher/history-voucher.module';
 import { OrdersModule } from './orders/orders.module';
 import { OrderProductModule } from './order_product/order_product.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { TrainingModelModule } from './training_model/training_model.module';
+import { AuthenticationMiddleware } from './common/middleware/authentication.middleware';
+import { JwtModule } from '@nestjs/jwt';
 
 dotenv.config();
 
@@ -46,23 +52,23 @@ const defaultOptions = {
       isGlobal: true,
       envFilePath: ['.env', '.env.local'],
     }),
-    ThrottlerModule.forRoot({
-      ttl: 60, // seconds
-      limit: 10,
-    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      ssl: true, // ssl is stand for Secure Sockets Layer - a global standard security technology that enables encrypted communication between a web browser and a web server
-      // host: 'localhost',
-      // port: 5432,
-      // username: 'postgres',
-      // password: 'xuantuoi01',
-      // database: 'ecommerce',
-      // synchronize: true,
+      // ssl: true, // ssl is stand for Secure Sockets Layer - a global standard security technology that enables encrypted communication between a web browser and a web server
       ...defaultOptions,
       autoLoadEntities: true,
     }),
-    ScheduleModule.forRoot(),
+    KeytokenModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET'),
+        signOptions: {
+          expiresIn: `${configService.get('JWT_EXPIRATION_TIME')}s`,
+        },
+      }),
+    }),
     UsersModule,
     KeytokenModule,
     AuthModule,
@@ -85,4 +91,15 @@ const defaultOptions = {
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthenticationMiddleware).forRoutes(
+      // Define routes that should use the middleware
+      {
+        path: '/v1/dashboard/overview',
+        method: RequestMethod.GET,
+      },
+      // Add more routes here if needed
+    );
+  }
+}

@@ -20,4 +20,6 @@ export interface User {
   attribute: object;
   isDeleted: boolean;
   order: any;
+  address: string;
+  phone: string;
 }

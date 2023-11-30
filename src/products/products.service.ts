@@ -737,6 +737,10 @@ export class ProductsService {
 
   public async getSimilarProducts(queryOptions: SimilarProductDto) {
     try {
+      console.log(
+        'url::::',
+        `${process.env.FLASK_SERVER}/recommend?productId=${queryOptions.product_id}&minN=${queryOptions.limit}`,
+      );
       const result = await axios
         .get(
           `${process.env.FLASK_SERVER}/recommend?productId=${queryOptions.product_id}&minN=${queryOptions.limit}`,
@@ -745,7 +749,7 @@ export class ProductsService {
           return res.data;
         })
         .catch((err) => {
-          console.log('err', err);
+          // console.log('err', err);
         });
       const listProductId = result.data;
       const listPromises = listProductId.map(async (productId: string) => {
@@ -753,6 +757,7 @@ export class ProductsService {
           where: {
             id: productId,
           },
+          relations: ['user'],
         });
         if (!product) {
           return null;
@@ -898,6 +903,7 @@ export class ProductsService {
 
       const productPerCategory = 60 / n;
       const listProduct = [];
+
       for (const key in response.data) {
         const products = await this.productRepository.query(
           `select * from products
@@ -905,6 +911,7 @@ export class ProductsService {
           and is_published = true
           and is_deleted = false
           order by created_at desc
+          OFFSET  ${Math.floor(Math.random() * 10) + 1}
           limit ${productPerCategory}
         `,
         );
@@ -932,5 +939,33 @@ export class ProductsService {
     const query = `select products.id, product_price, product_quantity , product_category, product_ratings_average , product_name , user_id
     from products `;
     return await this.productRepository.query(query);
+  }
+
+  public async getTotalProductOfUser(userId) {
+    try {
+      const query = `select count(*) from products where user_id = '${userId}'`;
+      const result = await this.productRepository.query(query);
+      return +result[0].count;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
+  public async getTopFiveProduct(userId) {
+    try {
+      const query = `select products.* from 
+        (select product_id from orders , order_product, products
+        where orders.id = order_product.order_id 
+        and order_product.product_id = products.id
+        and products.user_id='${userId}'
+        group by product_id
+        order by sum(quantity) desc
+        limit 5) AS A, products
+        where A.product_id = products.id`;
+      const result = await this.productRepository.query(query);
+      return result;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
   }
 }

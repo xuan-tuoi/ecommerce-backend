@@ -145,7 +145,6 @@ export class AuthService {
         publickey,
         privatekey,
       );
-      console.log('token in LOGIN ----->', token);
       await this.keyTokenService.createKeyToken({
         privateKey: privatekey,
         publicKey: publickey,
@@ -240,5 +239,25 @@ export class AuthService {
         ),
       },
     };
+  }
+  async getPassword(body: { newPassword: string; id: string }) {
+    try {
+      const user = await this.userService.findOne({ id: body.id });
+      if (!user) {
+        throw new BadRequestException('User not found');
+      }
+      const saltOrRounds = 10;
+      const passwordHash = await bcrypt.hash(body.newPassword, saltOrRounds);
+      const updatedUser = await this.userService.updateUser(body.id, {
+        ...user,
+        password: passwordHash,
+      });
+      if (!updatedUser) {
+        throw new BadRequestException('Update password fail');
+      }
+      return {
+        message: 'Update password success',
+      };
+    } catch (error) {}
   }
 }

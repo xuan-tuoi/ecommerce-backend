@@ -38,9 +38,7 @@ export class ReviewsService {
       .orderBy(`products.${pageOptionDto.sort}`, pageOptionDto.order)
       .skip(skip)
       .take(pageOptionDto.limit);
-
     const [reviews, reviewsCount] = await queryBuilder.getManyAndCount();
-
     const pageMetaDto: PageMetaDto = new PageMetaDto({
       pageOptionsDto: pageOptionDto,
       itemCount: reviewsCount,
@@ -324,10 +322,6 @@ export class ReviewsService {
   public async deleteReviewAndChild(deleteReviewDto: DeleteReviewDto) {
     try {
       const { productId, reviewId } = deleteReviewDto;
-      // found product by id
-      const foundProduct = await this.productService.getProductById(productId);
-
-      // found review by id
       const foundReview = await this.reviewRepository.findOne({
         where: { id: reviewId, isDeleted: false },
       });

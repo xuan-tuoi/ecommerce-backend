@@ -8,6 +8,7 @@ import * as createCsvWriter from 'csv-writer';
 import * as dotenv from 'dotenv';
 import axios from 'axios';
 import { ProductsService } from 'src/products/products.service';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 dotenv.config();
 
@@ -53,7 +54,7 @@ export class UsersService {
     return user;
   }
 
-  async updateUser(id: string, userDto) {
+  async updateUser(id: string, userDto: UpdateUserDto) {
     const user = await this.getUserById(id);
     const updatedUser = await this.usersRepository
       .save({ ...user, ...userDto })
