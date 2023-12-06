@@ -22,4 +22,5 @@ export interface User {
   order: any;
   address: string;
   phone: string;
+  country: string;
 }

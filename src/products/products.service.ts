@@ -951,16 +951,17 @@ export class ProductsService {
     }
   }
 
-  public async getTopFiveProduct(userId) {
+  public async getTopFiveProduct(userId: string, from, to) {
     try {
-      const query = `select products.* from 
-        (select product_id from orders , order_product, products
+      const query = `select A.sold , A.rating, products.*  from 
+        (select product_id , sum(quantity) as sold, AVG(product_ratings_average) as rating from orders , order_product, products
         where orders.id = order_product.order_id 
         and order_product.product_id = products.id
         and products.user_id='${userId}'
+        and orders.created_at between '${from}' and '${to}'
         group by product_id
         order by sum(quantity) desc
-        limit 5) AS A, products
+        limit 5) as A , products 
         where A.product_id = products.id`;
       const result = await this.productRepository.query(query);
       return result;

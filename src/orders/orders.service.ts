@@ -408,7 +408,7 @@ export class OrdersService {
 
       // calculate total revenue by day
       const totalRevenueByDay = listDate.reduce((acc, cur) => {
-        const sum = listOrderDeliveredByDay[cur] - listOrderCancelByDay[cur];
+        const sum = listOrderDeliveredByDay[cur];
         acc += sum;
         return acc;
       }, 0);
@@ -421,7 +421,7 @@ export class OrdersService {
       }, 0);
 
       const listRevenueByDay = listDate.reduce((acc, cur) => {
-        acc[cur] = listOrderDeliveredByDay[cur] - listOrderCancelByDay[cur];
+        acc[cur] = listOrderDeliveredByDay[cur];
         return acc;
       }, {});
 
@@ -539,6 +539,79 @@ export class OrdersService {
         listOrderPackagedByDay,
         listOrderShippingByDay,
       };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+  async getUserByCountry({ userId, from, to }) {
+    try {
+      const queryBuilder = await this.orderRepository.createQueryBuilder(
+        'orders',
+      );
+      queryBuilder
+        .select('users.country', 'country')
+        .addSelect('count(orders.id)', 'count')
+        .addSelect(
+          "SUM((order_checkout->>'totalPrice')::numeric)",
+          'total_price',
+        )
+        .innerJoin('orders.user', 'users')
+        .innerJoin('orders.orderProduct', 'order_product')
+        .innerJoin('order_product.product', 'products')
+        .where('products.user_id = :userId', { userId })
+        .andWhere('orders.order_status = :status', { status: 'delivered' })
+        .andWhere('orders.created_at between :from and :to', { from, to })
+        .groupBy('users.country')
+        .orderBy('total_price', 'DESC');
+
+      const listUserByCountry = await queryBuilder.getRawMany();
+      if (listUserByCountry.length === 0) {
+        return [];
+      }
+      let result = [];
+      // get top 3 country have highest revenue
+      const top3Country = listUserByCountry.slice(0, 3).map((item) => {
+        return {
+          country: item.country,
+          count: +item.count,
+          total_price: +item.total_price,
+        };
+      });
+      result.push(...top3Country);
+      // and other country will be group to other
+      const otherCountry = listUserByCountry.slice(3);
+      if (otherCountry.length > 0) {
+        const totalOtherCountry = otherCountry.reduce((acc, cur) => {
+          acc += +cur.total_price;
+          return acc;
+        }, 0);
+        result.push({
+          country: 'others',
+          count: otherCountry.reduce((acc, cur) => {
+            acc += +cur.count;
+            return acc;
+          }, 0),
+          total_price: totalOtherCountry,
+        });
+      } else {
+        result.push({
+          country: 'others',
+          count: 0,
+          total_price: 0,
+        });
+      }
+      const totalCount = result.reduce((acc, cur) => {
+        acc += cur.count;
+        return acc;
+      }, 0);
+      result = result.map((item) => {
+        return {
+          ...item,
+          percent: Math.round((item.count / totalCount) * 100),
+        };
+      });
+
+      return result;
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }

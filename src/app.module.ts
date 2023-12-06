@@ -29,6 +29,7 @@ import { OrderProductModule } from './order_product/order_product.module';
 import { TrainingModelModule } from './training_model/training_model.module';
 import { AuthenticationMiddleware } from './common/middleware/authentication.middleware';
 import { JwtModule } from '@nestjs/jwt';
+import { ValidateDateRangeMiddleware } from './common/middleware/validate-date-range.middleware';
 
 dotenv.config();
 
@@ -54,7 +55,7 @@ const defaultOptions = {
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      ssl: true, // ssl is stand for Secure Sockets Layer - a global standard security technology that enables encrypted communication between a web browser and a web server
+      // ssl: true, // ssl is stand for Secure Sockets Layer - a global standard security technology that enables encrypted communication between a web browser and a web server
       ...defaultOptions,
       autoLoadEntities: true,
     }),
@@ -93,13 +94,27 @@ const defaultOptions = {
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthenticationMiddleware).forRoutes(
-      // Define routes that should use the middleware
-      {
-        path: '/v1/dashboard/overview',
-        method: RequestMethod.GET,
-      },
-      // Add more routes here if needed
-    );
+    consumer
+      .apply(AuthenticationMiddleware, ValidateDateRangeMiddleware)
+      .forRoutes(
+        // Define routes that should use the middleware
+        {
+          path: '/v1/dashboard/overview',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/v1/dashboard/order-analytics',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/v1/dashboard/best-seller',
+          method: RequestMethod.GET,
+        },
+        {
+          path: '/v1/dashboard/user-by-country',
+          method: RequestMethod.GET,
+        },
+        // Add more routes here if needed
+      );
   }
 }

@@ -12,17 +12,22 @@ export class AppController {
   }
 
   @Get('/dashboard/overview')
-  getDetailDashboad(@Body() detailDto: GetOrderAnalyticsDto) {
+  getDetailDashboad(@Query() detailDto: GetOrderAnalyticsDto) {
     return this.appService.getDetailDashboad(detailDto);
   }
 
   @Get('/dashboard/order-analytics')
-  getOrderAnalytics(@Body() detailDto: GetOrderAnalyticsDto) {
+  getOrderAnalytics(@Query() detailDto: GetOrderAnalyticsDto) {
     return this.appService.getOrderAnalytics(detailDto);
   }
 
   @Get('/dashboard/best-seller')
-  getBestSellerProduct(@Query('userId') userId: string) {
-    return this.appService.getBestSellerProduct(userId);
+  getBestSellerProduct(@Query() detailDto: GetOrderAnalyticsDto) {
+    return this.appService.getBestSellerProduct(detailDto);
+  }
+
+  @Get('/dashboard/user-by-country')
+  getUserByCountry(@Query() detailDto: GetOrderAnalyticsDto) {
+    return this.appService.getUserByCountry(detailDto);
   }
 }
