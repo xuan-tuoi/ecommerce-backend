@@ -44,10 +44,10 @@ export class ProductsModule implements NestModule {
     consumer.apply(AuthenticationMiddleware).forRoutes(
       // Define routes that should use the middleware
       { path: '/v1/products', method: RequestMethod.PUT },
-      {
-        path: '/v1/products/:productId',
-        method: RequestMethod.DELETE,
-      },
+      // {
+      //   path: '/v1/products/:productId',
+      //   method: RequestMethod.DELETE,
+      // },
       // Add more routes here if needed
     );
   }

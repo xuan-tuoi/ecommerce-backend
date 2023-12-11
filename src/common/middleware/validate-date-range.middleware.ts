@@ -9,8 +9,6 @@ import { Request, Response, NextFunction } from 'express';
 export class ValidateDateRangeMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const { from, to } = req.query;
-    console.log('from', from);
-    console.log('to', to);
     if (from && to) {
       const fromDate = new Date(from as string);
       const toDate = new Date(to as string);

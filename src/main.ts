@@ -41,7 +41,7 @@ async function bootstrap() {
       'https://xuantuoi.pythonanywhere.com',
       'xuantuoi.pythonanywhere.com',
     ],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders:
       'Content-Type, Accept, Authorization, type, X-Client-Id , X-Rtoken-Id',
     credentials: true,

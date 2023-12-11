@@ -496,21 +496,26 @@ export class ProductsService {
   public async deleteProduct(productId: string) {
     const product = await this.getProductById(productId);
 
-    // xóa product trong bảng reviews
+    if (!product) {
+      throw new BadRequestException('Product not found');
+    }
+
+    // xóa reviews của product
     await this.productRepository.query(`
       delete from reviews
       where product_id = '${productId}'
     `);
 
-    // xóa product trong bảng order_product
+    // await this.productRepository.delete({
+    //   id: product.id,
+    // });
+    //update isDeleted = true
     await this.productRepository.query(`
-      delete from order_product
-      where product_id = '${productId}'
+      update products
+      set is_deleted = true
+      where id = '${productId}'
     `);
 
-    await this.productRepository.delete({
-      id: product.id,
-    });
     return {
       message: 'Delete product successfully',
     };
@@ -559,7 +564,6 @@ export class ProductsService {
       const listPromises = Array.from(listProduct)
         // .slice(0, 1)
         .map(async (product: HTMLElement, index: number) => {
-          console.log('--------------------START AT INDEX------', index);
           let imgSrc =
             'https://climate.onep.go.th/wp-content/uploads/2020/01/default-image.jpg';
           if (product.querySelector('img')) {
@@ -683,10 +687,6 @@ export class ProductsService {
           if (originalPriceElement) {
             const originalPrice =
               +originalPriceElement.textContent.substring(1);
-            console.log(
-              'originalPrice :::::::::::::::',
-              originalPriceElement.textContent,
-            );
             product_original_price = originalPrice * 25616;
           }
           // create product and save to db
@@ -737,10 +737,6 @@ export class ProductsService {
 
   public async getSimilarProducts(queryOptions: SimilarProductDto) {
     try {
-      console.log(
-        'url::::',
-        `${process.env.FLASK_SERVER}/recommend?productId=${queryOptions.product_id}&minN=${queryOptions.limit}`,
-      );
       const result = await axios
         .get(
           `${process.env.FLASK_SERVER}/recommend?productId=${queryOptions.product_id}&minN=${queryOptions.limit}`,
@@ -789,7 +785,6 @@ export class ProductsService {
         `,
       );
       if (listProduct.length === 0) {
-        console.log('listProduct.length === 0');
         const resutlt = await this.productRepository.query(
           `select * 
             from products

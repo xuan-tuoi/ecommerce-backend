@@ -211,7 +211,6 @@ export class VoucherService {
   }
 
   async getVoucherByCode(code: string) {
-    console.log('code', code);
     const voucher = await this.vouchersRepository.findOne({
       where: {
         voucher_code: code,

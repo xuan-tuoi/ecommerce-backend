@@ -249,7 +249,6 @@ export class OrdersService {
       await this.orderRepository.save(order);
       return order;
     } catch (error) {
-      console.log('error', error);
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
@@ -439,7 +438,7 @@ export class OrdersService {
         totalProduct,
         listRevenueByDay,
         totalRevenueByDay,
-        totalRefundByDay,
+        totalRefundByDay: listOrderCancel.length,
         listLatestOrder,
       };
     } catch (error) {

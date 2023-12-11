@@ -17,7 +17,6 @@ export class KeytokenService {
           userId,
         },
       });
-      console.log('userId is =====', userId);
       return keyToken;
     } catch (error) {
       throw new InternalServerErrorException(error);

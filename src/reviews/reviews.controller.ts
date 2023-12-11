@@ -88,7 +88,6 @@ export class ReviewsController {
     @Param('reviewId') reviewId: string,
     @Body('content') content: string,
   ) {
-    console.log('reviewId', reviewId, 'content', content);
     return await this.reviewService.updateReview(reviewId, content);
   }
 

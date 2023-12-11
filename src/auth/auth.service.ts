@@ -121,10 +121,98 @@ export class AuthService {
 
   async login(loginDto: LoginDto, @Response() res) {
     try {
-      const { email, password, rememberPassword } = loginDto;
+      const { email, password, rememberPassword, type, image } = loginDto;
       const foundShop = await this.userService.findOne({
         email: email,
       });
+      if (type === 'NEXT_AUTH') {
+        // user login with google | facebook | github
+        if (!foundShop) {
+          const passwordHash = await bcrypt.hash(password, saltOrRounds);
+          const newUser = await this.userService.createUser({
+            email: email,
+            role: RoleOfuser.USER,
+            password: passwordHash,
+            avatar: image,
+          });
+          console.log('newUser --------> ', newUser);
+          if (newUser) {
+            const privateKey = randomBytes(32);
+            const publicKey = randomBytes(32);
+
+            const keyStore = await this.keyTokenService.createKeyToken({
+              privateKey: privateKey.toString('hex'),
+              publicKey: publicKey.toString('hex'),
+              userId: newUser.id,
+            });
+            if (!keyStore) {
+              throw new Error('Create key token fail');
+            }
+
+            //create token and refreshToken
+            const token = await this.createTokenPair(
+              {
+                id: newUser.id,
+                email: newUser.email,
+              },
+              publicKey.toString('hex'),
+              privateKey.toString('hex'),
+            );
+            // save refresh token to DB
+            await this.keyTokenService.createKeyToken({
+              privateKey: privateKey.toString('hex'),
+              publicKey: publicKey.toString('hex'),
+              refreshToken: token.refreshToken,
+              userId: newUser.id,
+            });
+
+            return res.status(200).json({
+              user: newUser,
+              token: {
+                accessToken: token.accessToken,
+                refreshToken: token.refreshToken,
+                maxAge: new Date(
+                  new Date().getTime() +
+                    +process.env.JWT_EXPIRATION_TIME * 1000,
+                ),
+              },
+            });
+          }
+        } else {
+          // create publickey and privatekey
+          const privatekey = randomBytes(32).toString('hex');
+          const publickey = randomBytes(32).toString('hex');
+          const token = await this.createTokenPair(
+            {
+              id: foundShop.id,
+              email: foundShop.email,
+              username: foundShop.username,
+            },
+            publickey,
+            privatekey,
+          );
+          await this.keyTokenService.createKeyToken({
+            privateKey: privatekey,
+            publicKey: publickey,
+            userId: foundShop.id,
+            refreshToken: token.refreshToken,
+          });
+          return res.status(200).json({
+            user: {
+              ...foundShop,
+              avatar: image,
+            },
+            token: {
+              accessToken: token.accessToken,
+              refreshToken: token.refreshToken,
+              maxAge: new Date(
+                new Date().getTime() + +process.env.JWT_EXPIRATION_TIME * 1000,
+              ),
+            },
+          });
+        }
+      } else {
+      }
       if (!foundShop) {
         return res.status(404).send({ message: 'User not found' });
       }
@@ -220,7 +308,6 @@ export class AuthService {
       keyStore.publicKey,
       keyStore.privateKey,
     );
-    console.log('tokens in refresh API ---->', tokens);
     //update keytoken cũ trong DB
     await this.keyTokenService.updateKeyToken({
       id: keyStore.id,

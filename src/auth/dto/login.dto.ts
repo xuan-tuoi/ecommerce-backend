@@ -12,4 +12,7 @@ export class LoginDto {
   @IsBoolean()
   @IsNotEmpty()
   rememberPassword: boolean;
+
+  type?: string; // 'next-auth' | 'account'
+  image?: string;
 }
