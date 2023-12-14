@@ -152,7 +152,10 @@ export class OrdersService {
           return orderProduct;
         }),
       );
-      return order;
+      return {
+        ...order,
+        products: products,
+      };
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
