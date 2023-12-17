@@ -44,6 +44,29 @@ export class UsersService {
     return user;
   }
 
+  async getShopByName(name: string) {
+    try {
+      let shop = '';
+      if (name === 'loreal') {
+        shop = "L'Oreal";
+      } else if (name === 'bioderma') {
+        shop = 'Bioderma';
+      } else if (name === 'ordinary') {
+        shop = 'The Ordinary';
+      }
+
+      const queryBuilder = this.usersRepository.createQueryBuilder('users');
+      const users = await queryBuilder
+        .where('users.username = :username', {
+          username: shop,
+        })
+        .getOne();
+      return users;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
+
   async createUser(userDto) {
     if (!userDto.username) {
       userDto.username = userDto.email;

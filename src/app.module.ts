@@ -30,6 +30,7 @@ import { TrainingModelModule } from './training_model/training_model.module';
 import { AuthenticationMiddleware } from './common/middleware/authentication.middleware';
 import { JwtModule } from '@nestjs/jwt';
 import { ValidateDateRangeMiddleware } from './common/middleware/validate-date-range.middleware';
+import { PaymentModule } from './payment/payment.module';
 
 dotenv.config();
 
@@ -55,7 +56,7 @@ const defaultOptions = {
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      ssl: true, // ssl is stand for Secure Sockets Layer - a global standard security technology that enables encrypted communication between a web browser and a web server
+      // ssl: true, // ssl is stand for Secure Sockets Layer - a global standard security technology that enables encrypted communication between a web browser and a web server
       ...defaultOptions,
       autoLoadEntities: true,
     }),
@@ -82,6 +83,7 @@ const defaultOptions = {
     OrdersModule,
     OrderProductModule,
     TrainingModelModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [

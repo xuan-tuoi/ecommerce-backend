@@ -16,6 +16,11 @@ export class UsersController {
     return this.usersService.getHistoryOrdersOfUser();
   }
 
+  @Get('/shop')
+  getShopByName(@Query('name') name: string) {
+    return this.usersService.getShopByName(name);
+  }
+
   @Get(':id')
   getUserById(@Param('id') id: string) {
     return this.usersService.getUserById(id);

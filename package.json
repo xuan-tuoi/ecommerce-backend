@@ -61,6 +61,7 @@
     "rxjs": "^7.2.0",
     "streamifier": "^0.1.1",
     "typeorm": "^0.3.17",
+    "vn-payments": "^1.1.0",
     "winston": "^3.10.0"
   },
   "devDependencies": {
