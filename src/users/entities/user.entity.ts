@@ -55,10 +55,10 @@ export class UserEntity extends BaseEntity {
   })
   attribute: object;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', nullable: true, default: 'Male' })
   gender: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', nullable: true, default: '18' })
   age: string;
 
   @Column({ type: 'varchar', nullable: true })

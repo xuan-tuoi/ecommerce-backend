@@ -900,13 +900,14 @@ export class ProductsService {
       const listProduct = [];
 
       for (const key in response.data) {
+        console.log('key', response.data[key]);
         const products = await this.productRepository.query(
           `select * from products
           where product_category = '${mappingCategory(response.data[key])}'
           and is_published = true
           and is_deleted = false
           order by created_at desc
-          OFFSET  ${Math.floor(Math.random() * 10) + 1}
+          OFFSET  ${Math.floor(Math.random() * 100) + 1}
           limit ${productPerCategory}
         `,
         );
