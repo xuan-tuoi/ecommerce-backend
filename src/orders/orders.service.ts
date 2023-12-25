@@ -215,6 +215,34 @@ export class OrdersService {
     return { data: listOrdersWithProductsResolved, pageMetaDto };
   }
 
+  public async getAllOrdersOfShop(shopId, pageOptionsDto: PageOptionsDto) {
+    try {
+      const skip = (pageOptionsDto.page - 1) * pageOptionsDto.limit;
+      const queryBuilder = this.orderRepository.createQueryBuilder('orders');
+
+      queryBuilder
+        .leftJoinAndSelect('orders.user', 'user')
+        .leftJoinAndSelect('orders.orderProduct', 'orderProduct')
+        .leftJoinAndSelect('orderProduct.product', 'product')
+        .where('product.user_id = :shopId', { shopId: shopId })
+        .skip(skip)
+        .take(pageOptionsDto.limit)
+        .orderBy(`orders.${pageOptionsDto.sort}`, pageOptionsDto.order);
+
+      const total = await queryBuilder.getCount();
+      const listOrders = await queryBuilder.getMany();
+
+      const pageMetaDto = new PageMetaDto({
+        pageOptionsDto,
+        itemCount: total,
+      });
+
+      return { data: listOrders, pageMetaDto };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
   public async updateOrder(body: UpdateOrderDto) {
     try {
       const orderId = body.order_id;
@@ -685,6 +713,7 @@ export class OrdersService {
       });
 
       order.order_status = 'delivered';
+      order.time_delivery = new Date();
       await this.orderRepository.save(order);
       return {
         message: 'delivered success',

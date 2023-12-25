@@ -18,6 +18,7 @@ import { OrdersService } from './orders.service';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  // get all order of customer
   @Get('/:userId')
   async getAllOrdersOfUser(
     @Param('userId') userId: string,
@@ -26,6 +27,16 @@ export class OrdersController {
     const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
     options.limit = options.limit > 100 ? 100 : options.limit;
     return this.ordersService.getAllOrdersOfUser(userId, options);
+  }
+
+  @Get('shop/:shopId')
+  async getAllOrdersOfShop(
+    @Param('shopId') shopId: string,
+    @Query() pageOptionsDto: PageOptionsDto,
+  ) {
+    const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
+    options.limit = options.limit > 100 ? 100 : options.limit;
+    return this.ordersService.getAllOrdersOfShop(shopId, options);
   }
 
   @Post('/create')
