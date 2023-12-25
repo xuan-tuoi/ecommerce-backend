@@ -95,4 +95,30 @@ export class AppService {
       throw new BadRequestException(error);
     }
   }
+
+  async updateUser() {
+    try {
+      const listCountry = [
+        'Vietnam',
+        'United States',
+        'United Kingdom',
+        'Korea',
+        'Japan',
+      ];
+      // get all user in DB
+      const users = await this.userService.getAllCustomer();
+      // update user in DB
+      const updatedUsers = users.map((user) => {
+        const randomIndex = Math.floor(Math.random() * listCountry.length);
+        const randomCountry = listCountry[randomIndex];
+        return this.userService.updateUser(user.id, {
+          country: randomCountry,
+        });
+      });
+
+      return await Promise.all(updatedUsers);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
 }

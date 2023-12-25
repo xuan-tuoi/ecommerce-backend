@@ -41,4 +41,9 @@ export class OrdersController {
   async updateOrder(@Body() body: UpdateOrderDto) {
     return this.ordersService.updateOrder(body);
   }
+
+  @Patch('/update-day')
+  async updateDay() {
+    return this.ordersService.updateDay();
+  }
 }

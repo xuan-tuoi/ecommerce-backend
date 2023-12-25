@@ -618,4 +618,32 @@ export class OrdersService {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
+
+  async updateDay() {
+    try {
+      const listDate = [];
+      const currentDate = new Date('2023-10-11');
+      const toDate = new Date('2023-12-24');
+
+      while (currentDate <= toDate) {
+        listDate.push(currentDate.toISOString().split('T')[0]);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const listOrder = await this.orderRepository.find();
+      const listOrderUpdate = listOrder.map((item) => {
+        const dayRandom = listDate[Math.floor(Math.random() * listDate.length)];
+        return {
+          ...item,
+          created_at: dayRandom,
+        };
+      });
+      await this.orderRepository.save(listOrderUpdate);
+      return {
+        message: 'update success',
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
 }

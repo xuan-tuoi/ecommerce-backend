@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
 import { GetOrderAnalyticsDto } from './app.dto';
 import { AppService } from './app.service';
 
@@ -29,5 +29,10 @@ export class AppController {
   @Get('/dashboard/user-by-country')
   getUserByCountry(@Query() detailDto: GetOrderAnalyticsDto) {
     return this.appService.getUserByCountry(detailDto);
+  }
+
+  @Patch('dashboard/update-user')
+  updateUser() {
+    return this.appService.updateUser();
   }
 }

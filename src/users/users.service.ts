@@ -6,8 +6,6 @@ import { User } from './user.interface';
 import * as fs from 'fs';
 import * as createCsvWriter from 'csv-writer';
 import * as dotenv from 'dotenv';
-import axios from 'axios';
-import { ProductsService } from 'src/products/products.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 dotenv.config();
