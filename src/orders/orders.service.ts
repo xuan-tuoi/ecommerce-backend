@@ -678,7 +678,7 @@ export class OrdersService {
         }),
       };
       // send mail to user
-      const res = await axios.post('http://localhost:3000/api/success-order', {
+      const res = await axios.post(process.env.WEB_URL + '/api/success-order', {
         username: user.username,
         email: user.email,
         order: orderData,
