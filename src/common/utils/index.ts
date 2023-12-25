@@ -1,6 +1,7 @@
 import { createCipheriv, randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
 import * as _ from 'lodash';
+import moment from 'moment';
 
 export const getInfoData = ({ fields = [], object = {} }) => {
   return _.pick(object, fields);
@@ -31,3 +32,23 @@ export const mappingCategory = (category: string) => {
   const mapStr = category.split('_').join(' ');
   return mapStr.charAt(0).toUpperCase() + mapStr.slice(1);
 };
+
+function generateRandomTimeBetween(startDate, endDate) {
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+  const diff = end - start;
+
+  const randomMilliseconds = Math.floor(Math.random() * diff);
+  const resultTime = new Date(start + randomMilliseconds);
+
+  return resultTime.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+export function generateTimeList(startDate, endDate, count) {
+  const timeList = [];
+  for (let i = 0; i < count; i++) {
+    const randomTime = generateRandomTimeBetween(startDate, endDate);
+    timeList.push(randomTime);
+  }
+  return timeList;
+}

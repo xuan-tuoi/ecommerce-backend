@@ -5,11 +5,13 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import axios from 'axios';
 import moment from 'moment';
 import { CartService } from 'src/cart/cart.service';
 import { Order_status } from 'src/common/constant';
 import { PageMetaDto } from 'src/common/dto/pageMeta.dto';
 import { PageOptionsDto } from 'src/common/dto/pageOptions.dto';
+import { generateTimeList } from 'src/common/utils';
 import { HistoryVoucherService } from 'src/history-voucher/history-voucher.service';
 import { OrderProductService } from 'src/order_product/order_product.service';
 import { ProductsService } from 'src/products/products.service';
@@ -17,6 +19,7 @@ import { UsersService } from 'src/users/users.service';
 import { VoucherService } from 'src/voucher/voucher.service';
 import { Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create.dto';
+import { DeliveredDto } from './dto/delivered.dto';
 import { UpdateOrderDto } from './dto/update.dto';
 import { OrderEntity } from './entities/order.entity';
 
@@ -621,18 +624,19 @@ export class OrdersService {
 
   async updateDay() {
     try {
-      const listDate = [];
-      const currentDate = new Date('2023-10-11');
-      const toDate = new Date('2023-12-24');
+      const startDate = '2023-10-11';
+      const endDate = '2023-12-24';
+      const timeListCount = 10;
 
-      while (currentDate <= toDate) {
-        listDate.push(currentDate.toISOString().split('T')[0]);
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
+      const resultList = generateTimeList(startDate, endDate, timeListCount);
 
       const listOrder = await this.orderRepository.find();
-      const listOrderUpdate = listOrder.map((item) => {
-        const dayRandom = listDate[Math.floor(Math.random() * listDate.length)];
+      const listOrderUpdate = listOrder.map((item, index) => {
+        const dayRandom =
+          resultList[Math.floor(Math.random() * resultList.length)];
+        if (index == 0) {
+          console.log('dayRandom', dayRandom);
+        }
         return {
           ...item,
           created_at: dayRandom,
@@ -641,6 +645,49 @@ export class OrdersService {
       await this.orderRepository.save(listOrderUpdate);
       return {
         message: 'update success',
+      };
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async deliveredOrder(body: DeliveredDto) {
+    try {
+      const { orderId } = body;
+      const order = await this.orderRepository.findOne({
+        where: { id: orderId },
+        relations: ['user', 'orderProduct', 'orderProduct.product'],
+      });
+
+      if (!order) {
+        throw new BadRequestException('Order not found');
+      }
+
+      const user = order.user;
+      const orderData = {
+        ...order,
+        products: order.orderProduct.map((item) => {
+          return {
+            product_name: item.product.product_name,
+            quantityToBuy: item.quantity,
+            product_price: item.product.product_price,
+            product_thumbnail: item.product.product_thumbnail,
+            id: item.product.id,
+            shopName: 'The Coffee House',
+          };
+        }),
+      };
+      // send mail to user
+      const res = await axios.post('http://localhost:3000/api/success-order', {
+        username: user.username,
+        email: user.email,
+        order: orderData,
+      });
+
+      order.order_status = 'delivered';
+      await this.orderRepository.save(order);
+      return {
+        message: 'delivered success',
       };
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);

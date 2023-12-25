@@ -10,6 +10,7 @@ import {
 import { PageOptionsDto } from 'src/common/dto/pageOptions.dto';
 import { pick } from 'src/common/utils/helpers';
 import { CreateOrderDto } from './dto/create.dto';
+import { DeliveredDto } from './dto/delivered.dto';
 import { UpdateOrderDto } from './dto/update.dto';
 import { OrdersService } from './orders.service';
 
@@ -45,5 +46,10 @@ export class OrdersController {
   @Patch('/update-day')
   async updateDay() {
     return this.ordersService.updateDay();
+  }
+
+  @Post('/delivered')
+  async delivered(@Body() body: DeliveredDto) {
+    return this.ordersService.deliveredOrder(body);
   }
 }
