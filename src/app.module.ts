@@ -19,7 +19,6 @@ import { ProductsModule } from './products/products.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { VoucherModule } from './voucher/voucher.module';
-import { join } from 'path';
 import { CartModule } from './cart/cart.module';
 import { HistoryVoucherModule } from './history-voucher/history-voucher.module';
 import { OrdersModule } from './orders/orders.module';
@@ -28,7 +27,9 @@ import { TrainingModelModule } from './training_model/training_model.module';
 import { AuthenticationMiddleware } from './common/middleware/authentication.middleware';
 import { JwtModule } from '@nestjs/jwt';
 import { ValidateDateRangeMiddleware } from './common/middleware/validate-date-range.middleware';
-import { PaymentModule } from './payment/payment.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import type { RedisClientOptions } from 'redis';
+import * as redisStore from 'cache-manager-redis-store';
 
 dotenv.config();
 
@@ -69,6 +70,14 @@ const defaultOptions = {
         },
       }),
     }),
+    CacheModule.register<RedisClientOptions>({
+      isGlobal: true,
+      store: redisStore,
+      url: process.env.REDIS_URL || 'redis://0.0.0.0:6379',
+      // Store-specific configuration:
+      // host: 'localhost',
+      // port: 6379,
+    }),
     UsersModule,
     KeytokenModule,
     AuthModule,
@@ -81,7 +90,6 @@ const defaultOptions = {
     OrdersModule,
     OrderProductModule,
     TrainingModelModule,
-    PaymentModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,7 +1,10 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import {
   BadRequestException,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -21,12 +24,14 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { SimilarProductDto } from './dto/similar-product';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
+import { ProductInterface } from './product.interface';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(ProductEntity)
     private readonly productRepository: Repository<ProductEntity>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly userService: UsersService,
     private readonly orderProductService: OrderProductService,
   ) {}
@@ -35,7 +40,7 @@ export class ProductsService {
     return await this.productRepository.save(product);
   }
 
-  public async findOne(productId: string) {
+  public async findOne(productId: string): Promise<ProductInterface> {
     if (!productId) {
       throw new HttpException('Product not found', HttpStatus.BAD_REQUEST);
     }
@@ -100,7 +105,13 @@ export class ProductsService {
     return newProduct;
   }
 
-  public async getProductById(productId: string) {
+  public async getProductById(productId: string): Promise<any> {
+    const value: any = await this.cacheManager.get('productInfomation');
+    if (value) {
+      if (value[productId]) {
+        return value[productId];
+      }
+    }
     const product = await this.productRepository.findOne({
       where: {
         id: productId,
@@ -112,6 +123,10 @@ export class ProductsService {
     if (!product) {
       throw new BadRequestException('Product not found');
     }
+    await this.cacheManager.set('productInfomation', {
+      ...value,
+      [productId]: product,
+    });
     return product;
   }
 
@@ -817,6 +832,12 @@ export class ProductsService {
         ...foundProduct,
         ...body,
       });
+      // update cache product
+      const value: any = await this.cacheManager.get('productInfomation');
+      await this.cacheManager.set('productInfomation', {
+        ...value,
+        [body.product_id]: updatedProduct,
+      });
       return updatedProduct;
     } catch (error) {
       throw new BadRequestException(error);
@@ -937,7 +958,7 @@ export class ProductsService {
     return await this.productRepository.query(query);
   }
 
-  public async getTotalProductOfUser(userId) {
+  public async getTotalProductOfUser(userId: string) {
     try {
       const query = `select count(*) from products where user_id = '${userId}'`;
       const result = await this.productRepository.query(query);
